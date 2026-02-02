@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ressources - Samurai Marketing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="covers.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Gold Gradient Text */
+    .gold-gradient {
+      background: linear-gradient(
+        135deg,
+        #B8860B 0%,
+        #C9A227 25%,
+        #D4AF37 50%,
+        #FFD700 75%,
+        #C9A227 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200% auto;
+      animation: gold-shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes gold-shimmer {
+      0% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+      100% { background-position: 0% center; }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f5f5f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c9c9c9;
+      border-radius: 4px;
+    }
+
+    /* Modal backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+    }
+
+    /* Cover gradients by tag */
+    .cover-productivite {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .cover-edition-video {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .cover-vibe-coding {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .cover-organisation {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    .cover-images {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .cover-marketing {
+      background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+    }
+    .cover-hack-videos {
+      background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+    }
+    .cover-agents-ia {
+      background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+    }
+    .cover-contenu {
+      background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    }
+    .cover-default {
+      background: linear-gradient(135deg, #B8860B 0%, #D4AF37 100%);
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'samurai-gold': '#C9A227',
+            'apple-blue': '#0071E3',
+            'apple-gray': '#6e6e73',
+            'apple-bg': '#F5F5F7',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#F5F5F7]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // ============================================
+    // DONNÉES - 20 Ressources Réelles de Remixer
+    // ============================================
+    const RESOURCES = [
+      {
+        id: "RES001",
+        title: "Améliorateur de prompts",
+        shortDescription: "Transforme tes prompts sans effort avec le nouvel optimiseur de prompts officiel d'OpenAI pour Chat GPT. C'est gratuit et facile !",
+        ctaKeyword: "OPTIMISER",
+        linkToTool: "https://platform.openai.com/chat/edit",
+        vimeoUrl: "1157511491",
+        tags: ["Productivité"],
+        isFeatured: true
+      },
+      {
+        id: "RES002",
+        title: "Opus IA vidéos automatiques",
+        shortDescription: "Transforme une vidéo de 3 heures en 10 secondes d'apprentissage. Opus crée des résumés instantanés et des cheat sheets infographiques automatiquement.",
+        ctaKeyword: "TRANSFORMER",
+        linkToTool: "https://www.anthropic.com/claude",
+        vimeoUrl: "1157511088",
+        tags: ["Édition Vidéo"],
+        isFeatured: true
+      },
+      {
+        id: "RES003",
+        title: "Alternative gratuite Bolt Lovable",
+        shortDescription: "Découvre la meilleure alternative gratuite à Bolt et Lovable pour coder tes apps IA sans montage vidéo complexe.",
+        ctaKeyword: "DÉCOUVRIR",
+        linkToTool: "https://replit.com",
+        vimeoUrl: "1157511317",
+        tags: ["Vibe Coding"],
+        isFeatured: true
+      },
+      {
+        id: "RES004",
+        title: "Ton ordi bosse pendant que tu dors",
+        shortDescription: "Automatise tes tâches pendant que tu dors avec l'IA. Configure une synergie IA complète pour générer du contenu 24h/24.",
+        ctaKeyword: "AUTOMATISER",
+        linkToTool: "https://zapier.com",
+        vimeoUrl: "1157511407",
+        tags: ["Organisation"],
+        isFeatured: true
+      },
+      {
+        id: "RES005",
+        title: "Claude remplace des outils payants",
+        shortDescription: "Remplace 15+ outils SaaS payants avec Claude. Économise des milliers d'euros en utilisant une seule IA multifonctionnelle.",
+        ctaKeyword: "REMPLACER",
+        linkToTool: "https://www.anthropic.com/claude",
+        vimeoUrl: "1157511407",
+        tags: ["Organisation", "Marketing", "Agents IA", "Claude"],
+        isFeatured: false
+      },
+      {
+        id: "RES006",
+        title: "Animation IA qualité studio",
+        shortDescription: "Crée des animations professionnelles de qualité studio avec l'IA. Pas besoin de connaissances en motion design ou montage vidéo.",
+        ctaKeyword: "ANIMER",
+        linkToTool: "https://www.runway.ml",
+        vimeoUrl: "1157511752",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES007",
+        title: "Sépare n'importe quel son",
+        shortDescription: "Isole vocals, musique, bruits de fond et batterie de n'importe quelle chanson ou vidéo gratuitement avec l'IA audio.",
+        ctaKeyword: "SÉPARER",
+        linkToTool: "https://www.splitter.ai",
+        vimeoUrl: "",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES008",
+        title: "higgsfield's GPT 1.5 image",
+        shortDescription: "Génère des images surréalistes et cinématographiques avec GPT 1.5. La meilleure IA pour créer des visuels exceptionnels.",
+        ctaKeyword: "GÉNÉRER",
+        linkToTool: "https://higgsfield.ai",
+        vimeoUrl: "1157511837",
+        tags: ["Images"],
+        isFeatured: false
+      },
+      {
+        id: "RES009",
+        title: "Animations IA sans montage",
+        shortDescription: "Crée des animations IA fluides et professionnelles sans besoin de montage vidéo complexe. Résultat immédiat et publication direct.",
+        ctaKeyword: "CRÉER",
+        linkToTool: "https://www.descript.com",
+        vimeoUrl: "1157511752",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES010",
+        title: "google Disco",
+        shortDescription: "Explore Google Disco pour créer des designs visuels générés par IA. L'outil secret de Google pour la créativité sans limites.",
+        ctaKeyword: "EXPLORER",
+        linkToTool: "https://disco.withgoogle.com",
+        vimeoUrl: "1157510922",
+        tags: ["Vibe Coding"],
+        isFeatured: false
+      },
+      {
+        id: "RES011",
+        title: "Meilleurs modèles vidéo IA",
+        shortDescription: "Découvre le classement des meilleurs modèles IA pour créer des vidéos. Sora, Opus, Pika et bien d'autres comparés.",
+        ctaKeyword: "COMPARER",
+        linkToTool: "https://www.openai.com/sora",
+        vimeoUrl: "1157511653",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES012",
+        title: "pyjama peint",
+        shortDescription: "Hack viral : utilise l'IA pour peindre des looks et créer des visuels de mode tendance pour tes réels TikTok.",
+        ctaKeyword: "CRÉER",
+        linkToTool: "https://www.midjourney.com",
+        vimeoUrl: "1157510784",
+        tags: ["Hack Vidéos Virales"],
+        isFeatured: false
+      },
+      {
+        id: "RES013",
+        title: "Vole les super pouvoirs de Claude",
+        shortDescription: "Débloques tous les super pouvoirs cachés de Claude avec les prompts secrets et les techniques avancées.",
+        ctaKeyword: "DÉBLOQUER",
+        linkToTool: "https://www.anthropic.com/claude",
+        vimeoUrl: "1157511407",
+        tags: ["Vibe Coding"],
+        isFeatured: false
+      },
+      {
+        id: "RES014",
+        title: "llm council",
+        shortDescription: "Réunis plusieurs LLMs en conseil pour une intelligence décisionnelle supérieure. Fais voter Claude, GPT-4 et Gemini ensemble.",
+        ctaKeyword: "VOTER",
+        linkToTool: "https://huggingface.co",
+        vimeoUrl: "",
+        tags: ["Marketing"],
+        isFeatured: false
+      },
+      {
+        id: "RES015",
+        title: "Notebook lm skills Canva / Powerpoint",
+        shortDescription: "Transforme NotebookLM en super-pouvoir Canva et PowerPoint. Génère des présentations automatiques à partir de tes notes.",
+        ctaKeyword: "TRANSFORMER",
+        linkToTool: "https://notebooklm.google.com",
+        vimeoUrl: "",
+        tags: ["Marketing"],
+        isFeatured: false
+      },
+      {
+        id: "RES016",
+        title: "statistics",
+        shortDescription: "Analyse des statistiques complètes de ta présence IA. Mesure ton impact, tes conversions et ton ROI en temps réel.",
+        ctaKeyword: "ANALYSER",
+        linkToTool: "https://analytics.google.com",
+        vimeoUrl: "1157510673",
+        tags: ["Organisation"],
+        isFeatured: false
+      },
+      {
+        id: "RES017",
+        title: "nanobanana prompts",
+        shortDescription: "Accède à 1000+ prompts Nano Banana Pro pour générer des images surréalistes. La plus grande banque de prompts IA.",
+        ctaKeyword: "ACCÉDER",
+        linkToTool: "https://nanobanana.ai",
+        vimeoUrl: "1157511234",
+        tags: ["Images"],
+        isFeatured: true
+      },
+      {
+        id: "RES018",
+        title: "coherence perso videos",
+        shortDescription: "Génère des vidéos cohérentes et personnalisées avec cohérence IA. Ton clone vidéo qui parle exactement comme toi.",
+        ctaKeyword: "GÉNÉRER",
+        linkToTool: "https://www.synthesia.io",
+        vimeoUrl: "1157510719",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES019",
+        title: "upscaller",
+        shortDescription: "Agrandis tes images sans perte de qualité avec l'upscaleur IA le plus puissant. Jusqu'à 8K en un clic.",
+        ctaKeyword: "AGRANDIR",
+        linkToTool: "https://upscayl.github.io",
+        vimeoUrl: "1157510997",
+        tags: ["Images"],
+        isFeatured: false
+      },
+      {
+        id: "RES020",
+        title: "post AI Surfer épinglé",
+        shortDescription: "Duplicate le post viral d'AI Surfer qui a fonctionne. Le template secret pour créer des réels qui buzz.",
+        ctaKeyword: "DUPLIQUER",
+        linkToTool: "https://www.instagram.com/theaisurfer",
+        vimeoUrl: "1157510862",
+        tags: ["Hack Vidéos Virales", "Contenu"],
+        isFeatured: true,
+        coverGdriveId: "1vHCzw_8TNzfhYByceBxX09aY42WEJefx"
+      }
+    ];
+
+    // ============================================
+    // FONCTION: Get cover class based on tag
+    // ============================================
+    function getCoverClass(tags) {
+      if (!tags || tags.length === 0) return "cover-default";
+      const tag = tags[0].toLowerCase();
+      if (tag.includes("productivité")) return "cover-productivite";
+      if (tag.includes("édition") || tag.includes("video")) return "cover-edition-video";
+      if (tag.includes("vibe") || tag.includes("coding")) return "cover-vibe-coding";
+      if (tag.includes("organisation")) return "cover-organisation";
+      if (tag.includes("images")) return "cover-images";
+      if (tag.includes("marketing")) return "cover-marketing";
+      if (tag.includes("hack")) return "cover-hack-videos";
+      if (tag.includes("agents")) return "cover-agents-ia";
+      if (tag.includes("contenu")) return "cover-contenu";
+      return "cover-default";
+    }
+
+    // ============================================
+    // COMPOSANT: Header (ultra compact)
+    // ============================================
+    function Header() {
+      return (
+        <div className="w-full bg-[#1d1d1f]">
+          <header className="max-w-[1000px] mx-auto h-[40px] flex items-center justify-center px-6">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-white/90" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span className="text-white/90 text-sm font-semibold tracking-widest">SAMURAI MARKETING</span>
+            </div>
+          </header>
+        </div>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: Hero (avec CTA principal)
+    // ============================================
+    function Hero() {
+      return (
+        <section className="bg-[#0b0d0d] pt-4 pb-4 px-4 md:px-8 w-full">
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-2">
+            <p className="text-xs md:text-sm font-medium tracking-wide text-[#f5f5f7]/80">
+              100% faire ce que tu aimes. Sans t'épuiser.
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-[1.1]">
+              Allié IA. <span className="gold-gradient">Génie amplifié.</span>
+            </h1>
+            {/* CTA PRINCIPAL - Le plus important ! */}
+            <a
+              href="https://www.samurai-marketing.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 px-6 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base"
+            >
+              Crée gratuitement ton Allié IA
+            </a>
+          </div>
+        </section>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: SearchBar (full width, 2 lignes de tags)
+    // ============================================
+    function SearchBar({ searchTerm, setSearchTerm, selectedTag, setSelectedTag, tags }) {
+      // Split tags into 2 rows
+      const midPoint = Math.ceil(tags.length / 2);
+      const row1Tags = tags.slice(0, midPoint);
+      const row2Tags = tags.slice(midPoint);
+
+      return (
+        <div className="sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2">
+          <div className="max-w-[1000px] mx-auto px-4 md:px-6 space-y-2">
+
+            {/* Search Input - Full Width */}
+            <div className="relative w-full max-w-2xl mx-auto">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#86868B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Rechercher une ressource..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-full bg-white border border-black/10 focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 outline-none text-[15px] font-medium placeholder:text-[#86868B] transition-all shadow-sm"
+              />
+            </div>
+
+            {/* Tags Row 1 - Compact like AI Surfer */}
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              <button
+                onClick={() => setSelectedTag(null)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  !selectedTag
+                    ? 'bg-[#1d1d1f] text-white'
+                    : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
+                }`}
+              >
+                Tous
+              </button>
+              {row1Tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedTag === tag
+                      ? 'bg-gradient-to-r from-[#B8860B] to-[#D4AF37] text-white'
+                      : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Tags Row 2 - Compact like AI Surfer */}
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {row2Tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedTag === tag
+                      ? 'bg-gradient-to-r from-[#B8860B] to-[#D4AF37] text-white'
+                      : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: VideoModal (modifié)
+    // ============================================
+    function VideoModal({ isOpen, onClose, vimeoUrl, linkToTool, title, ctaKeyword }) {
+      if (!isOpen) return null;
+
+      return (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/80"
+          onClick={onClose}
+        >
+          <div
+            className="relative w-full max-w-[320px] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-[#1a1a1a] rounded-[24px] overflow-hidden shadow-2xl">
+
+              {/* Barre du haut - Style Apple blur */}
+              <div className="relative bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-white/10">
+                <button
+                  onClick={onClose}
+                  className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                >
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Bouton CTA bleu "Clique pour le lien" */}
+                {linkToTool && (
+                  <a
+                    href={linkToTool}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-[#0071e3] hover:bg-[#0077ed] px-4 py-2 rounded-full transition-colors shadow-lg"
+                  >
+                    <span className="text-white text-sm font-medium">Clique pour le lien</span>
+                    <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </div>
+
+              {/* Video Container - 9:16 */}
+              <div className="relative aspect-[9/16] bg-black">
+                {vimeoUrl ? (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${vimeoUrl}?autoplay=1&loop=1&muted=0&title=0&byline=0&portrait=0&dnt=1`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white/60 text-sm">Vidéo non disponible</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Barre du bas - Style Apple blur avec CTA */}
+              <div className="bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 border-t border-white/10">
+                <a
+                  href="https://www.samurai-marketing.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-full bg-[#0071e3] hover:bg-[#0077ed] py-2.5 rounded-full transition-colors shadow-lg"
+                >
+                  <span className="text-white text-base font-medium">Crée gratuitement ton Allié IA</span>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: AppleCard
+    // ============================================
+    function AppleCard({ resource }) {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+
+      // Clic sur la cover → ouvre la vidéo
+      const handleCoverClick = () => {
+        if (resource.vimeoUrl) {
+          setIsModalOpen(true);
+        }
+      };
+
+      // Clic sur le CTA → ouvre le lien
+      const handleCtaClick = (e) => {
+        e.stopPropagation();
+        if (resource.linkToTool) {
+          window.open(resource.linkToTool, "_blank");
+        }
+      };
+
+      const coverClass = getCoverClass(resource.tags);
+
+      return (
+        <>
+          <div
+            className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
+          >
+            {/* Cover Container - Clic ouvre la vidéo */}
+            <div
+              onClick={handleCoverClick}
+              className={`w-full overflow-hidden relative aspect-[3/4] cursor-pointer ${coverClass}`}
+            >
+              {/* Cover depuis covers.js (Google Drive) */}
+              {(() => {
+                const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w800` : null;
+                const finalUrl = coverUrl || gdriveUrl;
+
+                if (finalUrl) {
+                  return (
+                    <img
+                      src={finalUrl}
+                      alt={resource.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Fallback gradient avec lettre */}
+              <div
+                className="fallback-gradient absolute inset-0 flex items-center justify-center"
+                style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
+              >
+                <div className="text-white/20 text-8xl font-bold">
+                  {resource.title.charAt(0).toUpperCase()}
+                </div>
+              </div>
+
+              {/* Play Button Overlay */}
+              {resource.vimeoUrl && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                    <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              {/* Tag Badge */}
+              <div className="absolute top-3 left-3">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/50 text-white backdrop-blur-sm">
+                  {resource.tags[0]}
+                </span>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 md:p-5 flex flex-col flex-grow">
+              <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+                {resource.title}
+              </h3>
+              <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+                {resource.shortDescription}
+              </p>
+
+              {/* Footer - Clic ouvre le lien */}
+              <div
+                onClick={handleCtaClick}
+                className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                    {resource.ctaKeyword}
+                  </span>
+                </div>
+                <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <VideoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            vimeoUrl={resource.vimeoUrl}
+            linkToTool={resource.linkToTool}
+            title={resource.title}
+            ctaKeyword={resource.ctaKeyword}
+          />
+        </>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: ResourceGrid
+    // ============================================
+    function ResourceGrid({ title, resources }) {
+      if (resources.length === 0) {
+        return (
+          <div className="py-12 text-center">
+            <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
+          </div>
+        );
+      }
+
+      return (
+        <section className="w-full py-3 bg-[#F5F5F7]">
+          <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
+            <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">{title}</h2>
+          </div>
+
+          <div className="max-w-[1000px] mx-auto w-full px-4 md:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {resources.map((resource) => (
+                <AppleCard key={resource.id} resource={resource} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: Footer
+    // ============================================
+    function Footer() {
+      return (
+        <footer className="bg-[#0b0d0d] py-8 px-6">
+          <div className="max-w-[1000px] mx-auto text-center">
+            <p className="text-[#6e6e73] text-sm">
+              © 2026 Samurai Marketing. Tous droits réservés.
+            </p>
+          </div>
+        </footer>
+      );
+    }
+
+    // ============================================
+    // APP PRINCIPALE
+    // ============================================
+    function App() {
+      const [searchTerm, setSearchTerm] = useState("");
+      const [selectedTag, setSelectedTag] = useState(null);
+
+      const allTags = useMemo(() => {
+        const tags = new Set();
+        RESOURCES.forEach(r => r.tags.forEach(t => tags.add(t)));
+        return Array.from(tags).sort();
+      }, []);
+
+      const filteredResources = useMemo(() => {
+        return RESOURCES.filter(resource => {
+          const matchesSearch =
+            resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            resource.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            resource.ctaKeyword.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesTag = selectedTag ? resource.tags.includes(selectedTag) : true;
+          return matchesSearch && matchesTag;
+        });
+      }, [searchTerm, selectedTag]);
+
+      const featuredResources = useMemo(() =>
+        filteredResources.filter(r => r.isFeatured),
+        [filteredResources]
+      );
+
+      return (
+        <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
+          <Header />
+          <Hero />
+          <SearchBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedTag={selectedTag}
+            setSelectedTag={setSelectedTag}
+            tags={allTags}
+          />
+
+          <main className="flex-grow pb-8">
+            {searchTerm || selectedTag ? (
+              <ResourceGrid
+                title="Résultats de recherche"
+                resources={filteredResources}
+              />
+            ) : (
+              <ResourceGrid
+                title="Ressources les plus récentes"
+                resources={[...RESOURCES].reverse()}
+              />
+            )}
+          </main>
+
+          <Footer />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
