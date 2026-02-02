@@ -377,44 +377,49 @@
     }
 
     // ============================================
-    // COMPOSANT: Header (ultra compact)
+    // COMPOSANT: Header (fusionné dans Hero)
     // ============================================
     function Header() {
-      return (
-        <div className="w-full bg-[#1d1d1f]">
-          <header className="max-w-[1000px] mx-auto h-[40px] flex items-center justify-center px-6">
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5 text-white/90" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              <span className="text-white/90 text-sm font-semibold tracking-widest">SAMURAI MARKETING</span>
-            </div>
-          </header>
-        </div>
-      );
+      return null;
     }
 
     // ============================================
-    // COMPOSANT: Hero (avec CTA principal)
+    // COMPOSANT: Hero (avec logo + CTA)
     // ============================================
     function Hero() {
       return (
-        <section className="bg-[#0b0d0d] pt-4 pb-4 px-4 md:px-8 w-full">
-          <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-2">
-            <p className="text-xs md:text-sm font-medium tracking-wide text-[#f5f5f7]/80">
-              100% faire ce que tu aimes. Sans t'épuiser.
-            </p>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-[1.1]">
-              Allié IA. <span className="gold-gradient">Génie amplifié.</span>
+        <section className="bg-[#1a1a1a] pt-8 pb-8 px-5 md:pt-12 md:pb-10 w-full">
+          <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
+            {/* Logo - Desktop: icône + texte, Mobile: icône seule */}
+            <div className="flex items-center gap-3 mb-5 md:mb-6">
+              <img
+                src="Logo-icon.png"
+                alt="Samurai Marketing"
+                className="h-8 md:h-10 w-auto"
+              />
+              <span className="hidden md:block text-[#f5f5f5] text-sm font-semibold tracking-widest">
+                SAMURAI MARKETING
+              </span>
+            </div>
+
+            {/* Accroche */}
+            <h1 className="text-[24px] md:text-[32px] font-normal text-[#f5f5f5] leading-tight">
+              Tu génères déjà des revenus. Mais <span className="font-bold text-[#d4a84b]">tout repose encore sur toi</span>.
             </h1>
-            {/* CTA PRINCIPAL - Le plus important ! */}
+
+            {/* Sous-titre */}
+            <p className="mt-4 md:mt-5 text-[16px] md:text-[18px] font-normal text-[#f5f5f5] leading-relaxed">
+              Découvre comment les entrepreneurs atypiques créent un Allié IA entraîné sur <span className="font-bold text-[#d4a84b]">leur génie</span> — pour déléguer 80% du répétitif sans perdre ce qui les rend uniques.
+            </p>
+
+            {/* CTA */}
             <a
               href="https://www.samurai-marketing.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 px-6 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base"
+              className="mt-5 md:mt-6 px-8 py-4 bg-[#d4a84b] hover:bg-[#e8c068] text-[#1a1a1a] font-semibold text-[16px] rounded-lg transition-all duration-300"
             >
-              Crée gratuitement ton Allié IA
+              Accéder à la mini-formation
             </a>
           </div>
         </section>
