@@ -89,6 +89,15 @@
     .cover-default {
       background: linear-gradient(135deg, #B8860B 0%, #D4AF37 100%);
     }
+
+    /* Hide scrollbar for tags carousel */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 
   <script>
@@ -439,48 +448,51 @@
               />
             </div>
 
-            {/* Tags Row 1 - Compact like AI Surfer */}
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              <button
-                onClick={() => setSelectedTag(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !selectedTag
-                    ? 'bg-[#1d1d1f] text-white'
-                    : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
-                }`}
-              >
-                Tous
-              </button>
-              {row1Tags.map((tag) => (
+            {/* Tags Carousel - 2 lignes scrollables */}
+            <div className="space-y-2">
+              {/* Row 1 */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
                 <button
-                  key={tag}
-                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedTag === tag
-                      ? 'bg-gradient-to-r from-[#B8860B] to-[#D4AF37] text-white'
-                      : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
+                  onClick={() => setSelectedTag(null)}
+                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                    !selectedTag
+                      ? 'bg-[#1d1d1f] text-white'
+                      : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
                   }`}
                 >
-                  {tag}
+                  Tous
                 </button>
-              ))}
-            </div>
+                {row1Tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                      selectedTag === tag
+                        ? 'bg-[#1d1d1f] text-white'
+                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
 
-            {/* Tags Row 2 - Compact like AI Surfer */}
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              {row2Tags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedTag === tag
-                      ? 'bg-gradient-to-r from-[#B8860B] to-[#D4AF37] text-white'
-                      : 'bg-white/80 text-[#1d1d1f] hover:bg-white border border-black/10'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+              {/* Row 2 */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
+                {row2Tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                      selectedTag === tag
+                        ? 'bg-[#1d1d1f] text-white'
+                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
