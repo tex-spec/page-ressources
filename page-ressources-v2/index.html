@@ -631,7 +631,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="w-full h-full object-cover object-center transition-opacity duration-300"
+                      className="w-full h-full object-cover object-bottom transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       onLoad={(e) => {
@@ -780,7 +780,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover object-center"
+                            className="absolute inset-0 w-full h-full object-cover object-bottom"
                           />
                         );
                       }
@@ -1014,7 +1014,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="w-full h-full object-cover object-center transition-opacity duration-300"
+                        className="w-full h-full object-cover object-bottom transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         onLoad={(e) => {
