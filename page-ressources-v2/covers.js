@@ -51,7 +51,7 @@ const COVER_IDS = {
 function getCoverUrl(title) {
   const fileId = COVER_IDS[title];
   if (fileId) {
-    return `https://lh3.googleusercontent.com/d/${fileId}=w300-h400-c`;
+    return `https://lh3.googleusercontent.com/d/${fileId}=w400`;
   }
   return null;
 }
