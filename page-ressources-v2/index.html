@@ -634,7 +634,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%-30px)] transition-opacity duration-300"
+                      className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%-25px)] transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       width="300"
@@ -788,7 +788,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%-30px)] z-10"
+                            className="absolute inset-0 w-full h-full object-cover z-10"
                             onLoad={(e) => {
                               e.target.style.opacity = '1';
                               const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
@@ -1038,7 +1038,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%-30px)] transition-opacity duration-300"
+                        className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%-25px)] transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         width="300"
