@@ -626,7 +626,7 @@
               {/* Cover depuis covers.js (Google Drive) - format 9:16 */}
               {(() => {
                 const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
-                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533-c` : null;
+                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533` : null;
                 const finalUrl = coverUrl || gdriveUrl;
 
                 if (finalUrl) {
@@ -634,7 +634,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                      className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       width="300"
@@ -780,7 +780,7 @@
                     {/* Cover image - format 9:16 */}
                     {(() => {
                       const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
-                      const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w500-h889-c` : null;
+                      const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w500-h889` : null;
                       const finalUrl = coverUrl || gdriveUrl;
 
                       if (finalUrl) {
@@ -788,7 +788,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover z-10"
+                            className="absolute inset-0 w-full h-full object-contain z-10"
                             onLoad={(e) => {
                               e.target.style.opacity = '1';
                               const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
@@ -1030,7 +1030,7 @@
                 {/* Cover image - format 9:16 */}
                 {(() => {
                   const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
-                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533-c` : null;
+                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533` : null;
                   const finalUrl = coverUrl || gdriveUrl;
 
                   if (finalUrl) {
@@ -1038,7 +1038,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         width="300"
