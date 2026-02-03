@@ -589,19 +589,23 @@
 
     // ============================================
     // COMPOSANT: AppleCard
+    // Deux zones cliquables:
+    // - Cover (haut) → ouvre la vidéo
+    // - Texte (bas) → ouvre le Google Doc
     // ============================================
     function AppleCard({ resource, index }) {
       const [isModalOpen, setIsModalOpen] = useState(false);
 
       // Clic sur la cover → ouvre la vidéo
-      const handleCoverClick = () => {
+      const handleCoverClick = (e) => {
+        e.stopPropagation();
         if (resource.vimeoUrl) {
           setIsModalOpen(true);
         }
       };
 
-      // Clic sur le CTA → ouvre le lien
-      const handleCtaClick = (e) => {
+      // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+      const handleTextClick = (e) => {
         e.stopPropagation();
         if (resource.linkToTool) {
           window.open(resource.linkToTool, "_blank");
@@ -617,14 +621,15 @@
           >
             {/* Cover Container - Clic ouvre la vidéo */}
             <div
-              onClick={handleCoverClick}
-              className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
+              onClick={(e) => handleCoverClick(e)}
+              className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent relative"
             >
-              {/* Cover depuis covers.js (Google Drive) */}
+              {/* Cover depuis covers.js (Google Drive) ou API */}
               {(() => {
-                const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                 const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
-                const finalUrl = coverUrl || gdriveUrl || resource.coverUrl;
+                const apiCoverUrl = resource.coverUrl;
+                const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                 if (finalUrl) {
                   return (
@@ -653,9 +658,13 @@
                 return null;
               })()}
 
-              {/* Fallback gradient avec lettre */}
+              {/* Fallback gradient avec lettre - n'affiche que si AUCUNE source d'image n'existe */}
               {(() => {
-                const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                const gdriveUrl = resource.coverGdriveId;
+                const apiCoverUrl = resource.coverUrl;
+                const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
                 return (
                   <div
                     className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
@@ -680,8 +689,11 @@
               )}
             </div>
 
-            {/* Content */}
-            <div className="p-4 md:p-5 flex flex-col flex-grow">
+            {/* Content - Clic ouvre le Google Doc */}
+            <div
+              onClick={handleTextClick}
+              className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+            >
               <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                 {resource.title}
               </h3>
@@ -689,11 +701,8 @@
                 {resource.shortDescription}
               </p>
 
-              {/* Footer - Clic ouvre le lien */}
-              <div
-                onClick={handleCtaClick}
-                className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
-              >
+              {/* Footer avec mot-clé et icône lien externe */}
+              <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
@@ -701,7 +710,7 @@
                   </span>
                 </div>
                 <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </div>
             </div>
@@ -774,11 +783,12 @@
                     className="relative aspect-[3/4] cursor-pointer group overflow-hidden bg-transparent"
                     onClick={handleCoverClick}
                   >
-                    {/* Cover image */}
+                    {/* Cover image depuis covers.js (Google Drive) ou API */}
                     {(() => {
-                      const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                       const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600` : null;
-                      const finalUrl = coverUrl || gdriveUrl || resource.coverUrl;
+                      const apiCoverUrl = resource.coverUrl;
+                      const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                       if (finalUrl) {
                         return (
@@ -792,9 +802,13 @@
                       return null;
                     })()}
 
-                    {/* Fallback gradient avec lettre */}
+                    {/* Fallback gradient avec lettre - n'affiche que si AUCUNE source d'image n'existe */}
                     {(() => {
-                      const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                      const gdriveUrl = resource.coverGdriveId;
+                      const apiCoverUrl = resource.coverUrl;
+                      const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
                       return (
                         <div
                           className={`fallback-letter absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
@@ -991,19 +1005,24 @@
         setSelectedResourceId(null);
       };
 
-      // Modifier AppleCard pour avoir un onClick qui navigue
+      // Modifier AppleCard pour avoir deux zones cliquables distinctes
       function AppleCardWithNavigation({ resource, index }) {
         const [isModalOpen, setIsModalOpen] = useState(false);
 
-        const handleCoverClick = () => {
+        // Clic sur la cover → ouvre la vidéo
+        const handleCoverClick = (e) => {
+          e.stopPropagation();
           if (resource.vimeoUrl) {
             setIsModalOpen(true);
           }
         };
 
-        const handleCtaClick = (e) => {
+        // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+        const handleTextClick = (e) => {
           e.stopPropagation();
-          navigateToResource(resource.id);
+          if (resource.linkToTool) {
+            window.open(resource.linkToTool, '_blank');
+          }
         };
 
         const coverClass = getCoverClass(resource.tags);
@@ -1011,8 +1030,7 @@
         return (
           <>
             <div
-              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
-              onClick={() => navigateToResource(resource.id)}
+              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
             >
               {/* Cover Container */}
               <div
@@ -1022,11 +1040,12 @@
                 }}
                 className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
               >
-                {/* Cover image */}
+                {/* Cover image depuis covers.js (Google Drive) ou API */}
                 {(() => {
-                  const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                  const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                   const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
-                  const finalUrl = coverUrl || gdriveUrl || resource.coverUrl;
+                  const apiCoverUrl = resource.coverUrl;
+                  const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                   if (finalUrl) {
                     return (
@@ -1055,9 +1074,13 @@
                   return null;
                 })()}
 
-                {/* Fallback gradient */}
+                {/* Fallback gradient - n'affiche que si AUCUNE source d'image n'existe */}
                 {(() => {
-                  const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                  const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                  const gdriveUrl = resource.coverGdriveId;
+                  const apiCoverUrl = resource.coverUrl;
+                  const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
                   return (
                     <div
                       className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
@@ -1082,8 +1105,11 @@
                 )}
               </div>
 
-              {/* Content */}
-              <div className="p-4 md:p-5 flex flex-col flex-grow">
+              {/* Content - Clic ouvre le Google Doc */}
+              <div
+                onClick={handleTextClick}
+                className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+              >
                 <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                   {resource.title}
                 </h3>
@@ -1091,14 +1117,8 @@
                   {resource.shortDescription}
                 </p>
 
-                {/* Footer - Naviguer vers la ressource */}
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCtaClick(e);
-                  }}
-                  className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
-                >
+                {/* Footer avec mot-clé et flèche */}
+                <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
@@ -1106,7 +1126,7 @@
                     </span>
                   </div>
                   <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </div>
               </div>
