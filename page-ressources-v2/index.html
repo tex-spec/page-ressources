@@ -1174,19 +1174,21 @@
 
       // Filtrer les ressources à afficher
       const otherResources = useMemo(() => {
-        if (featuredResource) {
-          // Page featured: afficher toutes les autres ressources sauf la featured
-          return resources.filter(r => r.id !== featuredResource.id);
-        } else {
-          // Page d'accueil ou résultats de recherche
-          if (searchTerm || selectedTag) {
-            // Si y a une recherche/tag, afficher les résultats filtrés
-            return filteredResources;
-          } else {
-            // Page d'accueil: afficher TOUTES les ressources
-            return resources;
+        // Si recherche ou tag sélectionné, TOUJOURS utiliser les résultats filtrés
+        if (searchTerm || selectedTag) {
+          // Exclure la featured resource si elle existe
+          if (featuredResource) {
+            return filteredResources.filter(r => r.id !== featuredResource.id);
           }
+          return filteredResources;
         }
+
+        // Sinon, afficher toutes les ressources (sauf featured si présente)
+        if (featuredResource) {
+          return resources.filter(r => r.id !== featuredResource.id);
+        }
+
+        return resources;
       }, [featuredResource, searchTerm, selectedTag, filteredResources, resources]);
 
       return (
