@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ressources IA pour Entrepreneurs Atypiques | Samurai Marketing</title>
+  <meta name="description" content="Tu génères déjà des revenus mais tout repose sur toi ? Découvre comment déléguer 80% du répétitif à une IA entraînée sur ton génie. Ressources gratuites pour entrepreneurs atypiques.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ressources.samurai-marketing.com/">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#1a1a1a">
+
+  <!-- Open Graph (Facebook, LinkedIn) -->
+  <meta property="og:title" content="Délègue 80% à l'IA. Garde ton génie.">
+  <meta property="og:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA.">
+  <meta property="og:image" content="https://ressources.samurai-marketing.com/og-image.jpg">
+  <meta property="og:url" content="https://ressources.samurai-marketing.com/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Délègue 80% à l'IA. Garde ton génie.">
+  <meta name="twitter:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA.">
+  <meta name="twitter:image" content="https://ressources.samurai-marketing.com/og-image.jpg">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="covers.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Gold Gradient Text - Match samurai-marketing.com */
+    .gold-gradient {
+      background: linear-gradient(90deg, #7e5d1d, #e0bc79, #7e5d1d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f5f5f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c9c9c9;
+      border-radius: 4px;
+    }
+
+    /* Modal backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+    }
+
+    /* Cover gradients by tag */
+    .cover-productivite {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .cover-edition-video {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .cover-vibe-coding {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .cover-organisation {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    .cover-images {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .cover-marketing {
+      background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+    }
+    .cover-hack-videos {
+      background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+    }
+    .cover-agents-ia {
+      background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+    }
+    .cover-contenu {
+      background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    }
+    .cover-default {
+      background: linear-gradient(135deg, #B8860B 0%, #D4AF37 100%);
+    }
+
+    /* Hide scrollbar for tags carousel */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Detail view animations */
+    .detail-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    .detail-exit {
+      animation: slideOutRight 0.3s ease-in;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'samurai-gold': '#C9A227',
+            'apple-blue': '#0071E3',
+            'apple-gray': '#6e6e73',
+            'apple-bg': '#F5F5F7',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#F5F5F7]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // ============================================
+    // CONFIGURATION API - Google Sheet
+    // ============================================
+    // IMPORTANT: Remplace cette URL par celle de ton déploiement Apps Script
+    const API_URL = "https://script.google.com/macros/s/AKfycbyXt5H4hj0hvA4PaRh_SZMPBt48hjb5KnULO3RIbwSb8swIu0PaaivNFX0tOi4BO23S/exec";
+
+    // ============================================
+    // DONNÉES FALLBACK - Utilisées si l'API ne répond pas
+    // ============================================
+    const FALLBACK_RESOURCES = [
+      {
+        id: "RES001",
+        title: "Améliorateur de prompts",
+        shortDescription: "Transforme tes prompts sans effort avec le nouvel optimiseur de prompts officiel d'OpenAI pour Chat GPT. C'est gratuit et facile !",
+        ctaKeyword: "OPTIMISER",
+        linkToTool: "https://platform.openai.com/chat/edit",
+        vimeoUrl: "1157511491",
+        tags: ["Productivité"],
+        isFeatured: true
+      },
+      {
+        id: "RES002",
+        title: "Opus IA vidéos automatiques",
+        shortDescription: "Transforme une vidéo de 3 heures en 10 secondes d'apprentissage. Opus crée des résumés instantanés et des cheat sheets infographiques automatiquement.",
+        ctaKeyword: "TRANSFORMER",
+        linkToTool: "https://www.anthropic.com/claude",
+        vimeoUrl: "1157511088",
+        tags: ["Édition Vidéo"],
+        isFeatured: true
+      },
+      {
+        id: "RES003",
+        title: "Alternative gratuite Bolt Lovable",
+        shortDescription: "Découvre la meilleure alternative gratuite à Bolt et Lovable pour coder tes apps IA sans montage vidéo complexe.",
+        ctaKeyword: "DÉCOUVRIR",
+        linkToTool: "https://replit.com",
+        vimeoUrl: "1157511317",
+        tags: ["Vibe Coding"],
+        isFeatured: true
+      },
+      {
+        id: "RES004",
+        title: "Ton ordi bosse pendant que tu dors",
+        shortDescription: "Automatise tes tâches pendant que tu dors avec l'IA. Configure une synergie IA complète pour générer du contenu 24h/24.",
+        ctaKeyword: "AUTOMATISER",
+        linkToTool: "https://zapier.com",
+        vimeoUrl: "1157511407",
+        tags: ["Organisation"],
+        isFeatured: true
+      },
+      {
+        id: "RES006",
+        title: "Animation IA qualité studio",
+        shortDescription: "Crée des animations professionnelles de qualité studio avec l'IA. Pas besoin de connaissances en motion design ou montage vidéo.",
+        ctaKeyword: "ANIMER",
+        linkToTool: "https://www.runway.ml",
+        vimeoUrl: "1157511752",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES007",
+        title: "Sépare n'importe quel son",
+        shortDescription: "Isole vocals, musique, bruits de fond et batterie de n'importe quelle chanson ou vidéo gratuitement avec l'IA audio.",
+        ctaKeyword: "SÉPARER",
+        linkToTool: "https://www.splitter.ai",
+        vimeoUrl: "",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES008",
+        title: "higgsfield's GPT 1.5 image",
+        shortDescription: "Génère des images surréalistes et cinématographiques avec GPT 1.5. La meilleure IA pour créer des visuels exceptionnels.",
+        ctaKeyword: "GÉNÉRER",
+        linkToTool: "https://higgsfield.ai",
+        vimeoUrl: "1157511837",
+        tags: ["Images"],
+        isFeatured: false
+      },
+      {
+        id: "RES010",
+        title: "google Disco",
+        shortDescription: "Explore Google Disco pour créer des designs visuels générés par IA. L'outil secret de Google pour la créativité sans limites.",
+        ctaKeyword: "EXPLORER",
+        linkToTool: "https://disco.withgoogle.com",
+        vimeoUrl: "1157510922",
+        tags: ["Vibe Coding"],
+        isFeatured: false
+      },
+      {
+        id: "RES011",
+        title: "Meilleurs modèles vidéo IA",
+        shortDescription: "Découvre le classement des meilleurs modèles IA pour créer des vidéos. Sora, Opus, Pika et bien d'autres comparés.",
+        ctaKeyword: "COMPARER",
+        linkToTool: "https://www.openai.com/sora",
+        vimeoUrl: "1157511653",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES012",
+        title: "pyjama peint",
+        shortDescription: "Hack viral : utilise l'IA pour peindre des looks et créer des visuels de mode tendance pour tes réels TikTok.",
+        ctaKeyword: "CRÉER",
+        linkToTool: "https://www.midjourney.com",
+        vimeoUrl: "1157510784",
+        tags: ["Hack Vidéos Virales"],
+        isFeatured: false
+      },
+      {
+        id: "RES014",
+        title: "llm council",
+        shortDescription: "Réunis plusieurs LLMs en conseil pour une intelligence décisionnelle supérieure. Fais voter Claude, GPT-4 et Gemini ensemble.",
+        ctaKeyword: "VOTER",
+        linkToTool: "https://huggingface.co",
+        vimeoUrl: "",
+        tags: ["Marketing"],
+        isFeatured: false
+      },
+      {
+        id: "RES015",
+        title: "Notebook lm skills Canva / Powerpoint",
+        shortDescription: "Transforme NotebookLM en super-pouvoir Canva et PowerPoint. Génère des présentations automatiques à partir de tes notes.",
+        ctaKeyword: "TRANSFORMER",
+        linkToTool: "https://notebooklm.google.com",
+        vimeoUrl: "",
+        tags: ["Marketing"],
+        isFeatured: false
+      },
+      {
+        id: "RES016",
+        title: "statistics",
+        shortDescription: "Analyse des statistiques complètes de ta présence IA. Mesure ton impact, tes conversions et ton ROI en temps réel.",
+        ctaKeyword: "ANALYSER",
+        linkToTool: "https://analytics.google.com",
+        vimeoUrl: "1157510673",
+        tags: ["Organisation"],
+        isFeatured: false
+      },
+      {
+        id: "RES017",
+        title: "nanobanana prompts",
+        shortDescription: "Accède à 1000+ prompts Nano Banana Pro pour générer des images surréalistes. La plus grande banque de prompts IA.",
+        ctaKeyword: "ACCÉDER",
+        linkToTool: "https://nanobanana.ai",
+        vimeoUrl: "1157511234",
+        tags: ["Images"],
+        isFeatured: true
+      },
+      {
+        id: "RES018",
+        title: "coherence perso videos",
+        shortDescription: "Génère des vidéos cohérentes et personnalisées avec cohérence IA. Ton clone vidéo qui parle exactement comme toi.",
+        ctaKeyword: "GÉNÉRER",
+        linkToTool: "https://www.synthesia.io",
+        vimeoUrl: "1157510719",
+        tags: ["Édition Vidéo"],
+        isFeatured: false
+      },
+      {
+        id: "RES019",
+        title: "upscaller",
+        shortDescription: "Agrandis tes images sans perte de qualité avec l'upscaleur IA le plus puissant. Jusqu'à 8K en un clic.",
+        ctaKeyword: "AGRANDIR",
+        linkToTool: "https://upscayl.github.io",
+        vimeoUrl: "1157510997",
+        tags: ["Images"],
+        isFeatured: false
+      },
+      {
+        id: "RES020",
+        title: "post AI Surfer épinglé",
+        shortDescription: "Duplicate le post viral d'AI Surfer qui a fonctionne. Le template secret pour créer des réels qui buzz.",
+        ctaKeyword: "DUPLIQUER",
+        linkToTool: "https://www.instagram.com/theaisurfer",
+        vimeoUrl: "1157510862",
+        tags: ["Hack Vidéos Virales", "Contenu"],
+        isFeatured: true,
+        coverGdriveId: "1vHCzw_8TNzfhYByceBxX09aY42WEJefx"
+      }
+    ];
+
+    // ============================================
+    // FONCTION: Fetch données depuis Google Sheet API
+    // ============================================
+    async function fetchResourcesFromSheet() {
+      if (API_URL === "REMPLACER_PAR_TON_URL_APPS_SCRIPT") {
+        console.log("API URL non configurée - utilisation des données fallback");
+        return null;
+      }
+
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (data.success && data.resources) {
+          console.log(`✅ ${data.count} ressources chargées depuis Google Sheet`);
+          return data.resources;
+        }
+        return null;
+      } catch (error) {
+        console.error("Erreur fetch API:", error);
+        return null;
+      }
+    }
+
+    // ============================================
+    // FONCTION: Get cover class based on tag
+    // ============================================
+    function getCoverClass(tags) {
+      if (!tags || tags.length === 0) return "cover-default";
+      const tag = tags[0].toLowerCase();
+      if (tag.includes("productivité")) return "cover-productivite";
+      if (tag.includes("édition") || tag.includes("video")) return "cover-edition-video";
+      if (tag.includes("vibe") || tag.includes("coding")) return "cover-vibe-coding";
+      if (tag.includes("organisation")) return "cover-organisation";
+      if (tag.includes("images")) return "cover-images";
+      if (tag.includes("marketing")) return "cover-marketing";
+      if (tag.includes("hack")) return "cover-hack-videos";
+      if (tag.includes("agents")) return "cover-agents-ia";
+      if (tag.includes("contenu")) return "cover-contenu";
+      return "cover-default";
+    }
+
+    // ============================================
+    // COMPOSANT: Header (fusionné dans Hero)
+    // ============================================
+    function Header() {
+      return null;
+    }
+
+    // ============================================
+    // COMPOSANT: Hero (Apple style - sans logo)
+    // ============================================
+    function Hero() {
+      return (
+        <section
+          className="pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-fixed bg-center bg-cover"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('BG-blur-checkout1.png')`
+          }}
+        >
+          <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
+            {/* Setup (petit) */}
+            <p className="text-[18px] md:text-[20px] font-semibold text-[#f5f5f7] leading-[1.4]">
+              Tu génères déjà. Mais <span className="italic underline">tout repose sur toi</span>.
+            </p>
+
+            {/* Punchline (gros) - 2 lignes */}
+            <h1 className="mt-3 md:mt-4 text-[36px] md:text-[60px] font-bold text-[#f5f5f7] leading-[1.1] md:leading-[1.06] tracking-[-0.4px] md:tracking-[-0.6px]">
+              Délègue 80% à l'IA.<br/>
+              <span className="gold-gradient">Garde ton Génie.</span>
+            </h1>
+
+            {/* CTA - Bouton Apple */}
+            <a
+              href="https://www.samurai-marketing.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-7 md:mt-8 px-7 py-4 md:px-8 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
+            >
+              Découvrir comment
+            </a>
+          </div>
+        </section>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: SearchBar (full width, 2 lignes de tags)
+    // ============================================
+    function SearchBar({ searchTerm, setSearchTerm, selectedTag, setSelectedTag, tags }) {
+      // Split tags into 2 rows
+      const midPoint = Math.ceil(tags.length / 2);
+      const row1Tags = tags.slice(0, midPoint);
+      const row2Tags = tags.slice(midPoint);
+
+      return (
+        <div className="sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2">
+          <div className="max-w-[1000px] mx-auto px-4 md:px-6 space-y-2">
+
+            {/* Search Input - Full Width */}
+            <div className="relative w-full max-w-2xl mx-auto">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#86868B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Rechercher une ressource..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-full bg-white border border-black/10 focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 outline-none text-[15px] font-medium placeholder:text-[#86868B] transition-all shadow-sm"
+              />
+            </div>
+
+            {/* Tags Carousel - 2 lignes scrollables */}
+            <div className="space-y-2">
+              {/* Row 1 */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                    !selectedTag
+                      ? 'bg-[#1d1d1f] text-white'
+                      : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
+                  }`}
+                >
+                  Tous
+                </button>
+                {row1Tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                      selectedTag === tag
+                        ? 'bg-[#1d1d1f] text-white'
+                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Row 2 */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
+                {row2Tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                      selectedTag === tag
+                        ? 'bg-[#1d1d1f] text-white'
+                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: VideoModal (modifié)
+    // ============================================
+    function VideoModal({ isOpen, onClose, vimeoUrl, linkToTool, title, ctaKeyword }) {
+      if (!isOpen) return null;
+
+      return (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/80"
+          onClick={onClose}
+        >
+          <div
+            className="relative w-full max-w-[320px] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-[#1a1a1a] rounded-[24px] overflow-hidden shadow-2xl">
+
+              {/* Barre du haut - Style Apple blur */}
+              <div className="relative bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-white/10">
+                <button
+                  onClick={onClose}
+                  className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                >
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Bouton CTA bleu "Clique pour le lien" */}
+                {linkToTool && (
+                  <a
+                    href={linkToTool}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-[#0071e3] hover:bg-[#0077ed] px-4 py-2 rounded-full transition-colors shadow-lg"
+                  >
+                    <span className="text-white text-sm font-medium">Clique pour le lien</span>
+                    <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </div>
+
+              {/* Video Container - 9:16 */}
+              <div className="relative aspect-[9/16] bg-black">
+                {vimeoUrl ? (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${vimeoUrl}?autoplay=1&loop=1&muted=0&title=0&byline=0&portrait=0&dnt=1`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white/60 text-sm">Vidéo non disponible</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Barre du bas - Style Apple blur avec CTA */}
+              <div className="bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 border-t border-white/10">
+                <a
+                  href="https://www.samurai-marketing.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-full bg-[#0071e3] hover:bg-[#0077ed] py-2.5 rounded-full transition-colors shadow-lg"
+                >
+                  <span className="text-white text-base font-medium">Découvre comment</span>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: AppleCard
+    // ============================================
+    function AppleCard({ resource, index }) {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+
+      // Clic sur la cover → ouvre la vidéo
+      const handleCoverClick = () => {
+        if (resource.vimeoUrl) {
+          setIsModalOpen(true);
+        }
+      };
+
+      // Clic sur le CTA → ouvre le lien
+      const handleCtaClick = (e) => {
+        e.stopPropagation();
+        if (resource.linkToTool) {
+          window.open(resource.linkToTool, "_blank");
+        }
+      };
+
+      const coverClass = getCoverClass(resource.tags);
+
+      return (
+        <>
+          <div
+            className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
+          >
+            {/* Cover Container - Clic ouvre la vidéo */}
+            <div
+              onClick={handleCoverClick}
+              className={`w-full overflow-hidden relative aspect-[9/16] cursor-pointer ${coverClass}`}
+            >
+              {/* Skeleton loader */}
+              <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+
+              {/* Cover depuis covers.js (Google Drive) - format 9:16 */}
+              {(() => {
+                const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533-c` : null;
+                const finalUrl = coverUrl || gdriveUrl;
+
+                if (finalUrl) {
+                  return (
+                    <img
+                      src={finalUrl}
+                      alt={resource.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                      loading={index < 4 ? "eager" : "lazy"}
+                      decoding="async"
+                      width="300"
+                      height="533"
+                      onLoad={(e) => {
+                        e.target.style.opacity = '1';
+                        const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                        if (skeleton) skeleton.style.display = 'none';
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                        if (skeleton) skeleton.style.display = 'none';
+                        const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                      style={{ opacity: 0 }}
+                    />
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Fallback gradient avec lettre */}
+              <div
+                className="fallback-gradient absolute inset-0 flex items-center justify-center"
+                style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
+              >
+                <div className="text-white/20 text-8xl font-bold">
+                  {resource.title.charAt(0).toUpperCase()}
+                </div>
+              </div>
+
+              {/* Play Button Overlay */}
+              {resource.vimeoUrl && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                    <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-4 md:p-5 flex flex-col flex-grow">
+              <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+                {resource.title}
+              </h3>
+              <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+                {resource.shortDescription}
+              </p>
+
+              {/* Footer - Clic ouvre le lien */}
+              <div
+                onClick={handleCtaClick}
+                className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                    {resource.ctaKeyword}
+                  </span>
+                </div>
+                <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <VideoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            vimeoUrl={resource.vimeoUrl}
+            linkToTool={resource.linkToTool}
+            title={resource.title}
+            ctaKeyword={resource.ctaKeyword}
+          />
+        </>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: ResourceGrid
+    // ============================================
+    function ResourceGrid({ title, resources }) {
+      if (resources.length === 0) {
+        return (
+          <div className="py-12 text-center">
+            <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
+          </div>
+        );
+      }
+
+      return (
+        <section className="w-full py-3 bg-[#F5F5F7]">
+          <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
+            <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">{title}</h2>
+          </div>
+
+          <div className="max-w-[1000px] mx-auto w-full px-4 md:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {resources.map((resource, index) => (
+                <AppleCard key={resource.id} resource={resource} index={index} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: FeaturedResource (Section mise en avant)
+    // S'insère entre les tags et la grille
+    // ============================================
+    function FeaturedResource({ resource }) {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const coverClass = getCoverClass(resource.tags);
+
+      const handleCoverClick = () => {
+        if (resource.vimeoUrl) {
+          setIsModalOpen(true);
+        }
+      };
+
+      return (
+        <>
+          <section className="bg-white py-[30px] px-4 md:px-6 border-b border-black/5">
+            <div className="max-w-[800px] mx-auto">
+              <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-0">
+
+                  {/* Colonne gauche: Cover Image (1/3 - cliquable pour vidéo) - format 9:16 */}
+                  <div
+                    className="relative aspect-[9/16] cursor-pointer group bg-black overflow-hidden"
+                    onClick={handleCoverClick}
+                  >
+                    {/* Skeleton loader */}
+                    <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+
+                    {/* Cover image - format 9:16 */}
+                    {(() => {
+                      const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                      const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w500-h889-c` : null;
+                      const finalUrl = coverUrl || gdriveUrl;
+
+                      if (finalUrl) {
+                        return (
+                          <img
+                            src={finalUrl}
+                            alt={resource.title}
+                            className="absolute inset-0 w-full h-full object-cover z-10"
+                            onLoad={(e) => {
+                              e.target.style.opacity = '1';
+                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                              if (skeleton) skeleton.style.display = 'none';
+                              const fallback = e.target.parentElement.querySelector('.fallback-letter');
+                              if (fallback) fallback.style.display = 'none';
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                              if (skeleton) skeleton.style.display = 'none';
+                            }}
+                            style={{ opacity: 0 }}
+                          />
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Fallback gradient avec lettre */}
+                    <div className="fallback-letter absolute inset-0 flex items-center justify-center">
+                      <div className="text-white/20 text-8xl font-bold">
+                        {resource.title.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+
+                    {/* Play Button Overlay */}
+                    {resource.vimeoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                        <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                          <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Colonne droite: Titre, description, CTA (2/3) */}
+                  <div className="flex flex-col justify-center p-6 md:p-10">
+                    {/* Titre XL en noir */}
+                    <h2 className="text-[32px] md:text-[44px] font-bold text-[#1d1d1f] leading-[1.1] tracking-[-0.4px] mb-4">
+                      {resource.title}
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed mb-6">
+                      {resource.shortDescription}
+                    </p>
+
+                    {/* Mot-clé CTA doré */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-[12px] text-[#86868B] font-medium">Mot-clé:</span>
+                      <span className="px-3 py-1.5 rounded-full text-[12px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                        {resource.ctaKeyword}
+                      </span>
+                    </div>
+
+                    {/* Bouton CTA bleu - pas full width */}
+                    <a
+                      href={resource.linkToTool}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center self-start px-10 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg"
+                    >
+                      Accès immédiat à la ressource
+                      <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Modal vidéo */}
+          <VideoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            vimeoUrl={resource.vimeoUrl}
+            linkToTool={resource.linkToTool}
+            title={resource.title}
+            ctaKeyword={resource.ctaKeyword}
+          />
+        </>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: Footer
+    // ============================================
+    function Footer() {
+      return (
+        <footer className="bg-[#0b0d0d] py-12 px-6">
+          <div className="max-w-[1000px] mx-auto">
+            {/* Navigation links */}
+            <div className="flex flex-wrap justify-center gap-6 mb-6">
+              <a
+                href="https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                Mentions légales
+              </a>
+              <span className="text-[#3a3a3c]">|</span>
+              <a
+                href="https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                CGV
+              </a>
+              <span className="text-[#3a3a3c]">|</span>
+              <a
+                href="mailto:tex@texheyit.com"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                Contact
+              </a>
+            </div>
+
+            {/* Copyright */}
+            <p className="text-[#6e6e73] text-sm text-center">
+              © 2026 Samurai Marketing. Tous droits réservés.
+            </p>
+          </div>
+        </footer>
+      );
+    }
+
+    // ============================================
+    // FONCTION: Extraire resourceId du hash
+    // ============================================
+    function getResourceIdFromHash() {
+      const hash = window.location.hash.substring(1);
+      if (hash.startsWith('id=')) {
+        return hash.substring(3);
+      }
+      return null;
+    }
+
+    // ============================================
+    // APP PRINCIPALE
+    // ============================================
+    function App() {
+      const [searchTerm, setSearchTerm] = useState("");
+      const [selectedTag, setSelectedTag] = useState(null);
+      const [resources, setResources] = useState(FALLBACK_RESOURCES);
+      const [isLoading, setIsLoading] = useState(true);
+      const [selectedResourceId, setSelectedResourceId] = useState(getResourceIdFromHash());
+
+      // Fonction pour dédoublonner par titre
+      const deduplicateResources = (data) => {
+        const seen = new Set();
+        return data.filter(item => {
+          const key = item.title.toLowerCase().trim();
+          if (seen.has(key)) {
+            console.log(`⚠️ Doublon supprimé: ${item.title}`);
+            return false;
+          }
+          seen.add(key);
+          return true;
+        });
+      };
+
+      // Fetch données depuis Google Sheet au chargement
+      useEffect(() => {
+        async function loadData() {
+          const sheetData = await fetchResourcesFromSheet();
+          if (sheetData && sheetData.length > 0) {
+            const uniqueData = deduplicateResources(sheetData);
+            setResources(uniqueData);
+          }
+          setIsLoading(false);
+        }
+        loadData();
+      }, []);
+
+      // Écouter les changements de hash (navigation fluide)
+      useEffect(() => {
+        const handleHashChange = () => {
+          const resourceId = getResourceIdFromHash();
+          setSelectedResourceId(resourceId);
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+      }, []);
+
+      // Fonction pour naviguer vers une ressource
+      const navigateToResource = (resourceId) => {
+        window.location.hash = `id=${resourceId}`;
+        setSelectedResourceId(resourceId);
+      };
+
+      // Fonction pour retourner à la liste
+      const handleBackToList = () => {
+        window.location.hash = '';
+        setSelectedResourceId(null);
+      };
+
+      // Modifier AppleCard pour avoir un onClick qui navigue
+      function AppleCardWithNavigation({ resource, index }) {
+        const [isModalOpen, setIsModalOpen] = useState(false);
+
+        const handleCoverClick = () => {
+          if (resource.vimeoUrl) {
+            setIsModalOpen(true);
+          }
+        };
+
+        const handleCtaClick = (e) => {
+          e.stopPropagation();
+          navigateToResource(resource.id);
+        };
+
+        const coverClass = getCoverClass(resource.tags);
+
+        return (
+          <>
+            <div
+              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+              onClick={() => navigateToResource(resource.id)}
+            >
+              {/* Cover Container */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCoverClick();
+                }}
+                className={`w-full overflow-hidden relative aspect-[9/16] cursor-pointer ${coverClass}`}
+              >
+                {/* Skeleton loader */}
+                <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+
+                {/* Cover image - format 9:16 */}
+                {(() => {
+                  const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h533-c` : null;
+                  const finalUrl = coverUrl || gdriveUrl;
+
+                  if (finalUrl) {
+                    return (
+                      <img
+                        src={finalUrl}
+                        alt={resource.title}
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        loading={index < 4 ? "eager" : "lazy"}
+                        decoding="async"
+                        width="300"
+                        height="533"
+                        onLoad={(e) => {
+                          e.target.style.opacity = '1';
+                          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                          if (skeleton) skeleton.style.display = 'none';
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                          if (skeleton) skeleton.style.display = 'none';
+                          const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                        style={{ opacity: 0 }}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Fallback gradient */}
+                <div
+                  className="fallback-gradient absolute inset-0 flex items-center justify-center"
+                  style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
+                >
+                  <div className="text-white/20 text-8xl font-bold">
+                    {resource.title.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+
+                {/* Play Button Overlay */}
+                {resource.vimeoUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                      <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="p-4 md:p-5 flex flex-col flex-grow">
+                <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+                  {resource.title}
+                </h3>
+                <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+                  {resource.shortDescription}
+                </p>
+
+                {/* Footer - Naviguer vers la ressource */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCtaClick(e);
+                  }}
+                  className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                      {resource.ctaKeyword}
+                    </span>
+                  </div>
+                  <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <VideoModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              vimeoUrl={resource.vimeoUrl}
+              linkToTool={resource.linkToTool}
+              title={resource.title}
+              ctaKeyword={resource.ctaKeyword}
+            />
+          </>
+        );
+      }
+
+      const allTags = useMemo(() => {
+        const tags = new Set();
+        resources.forEach(r => r.tags && r.tags.forEach(t => tags.add(t)));
+        return Array.from(tags).sort();
+      }, [resources]);
+
+      const filteredResources = useMemo(() => {
+        return resources.filter(resource => {
+          const matchesSearch =
+            resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (resource.shortDescription || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (resource.ctaKeyword || '').toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesTag = selectedTag ? (resource.tags || []).includes(selectedTag) : true;
+          return matchesSearch && matchesTag;
+        });
+      }, [searchTerm, selectedTag, resources]);
+
+      // Trouver la ressource sélectionnée (pour featured section)
+      const featuredResource = resources.find(r => r.id === selectedResourceId);
+
+      // Filtrer les autres ressources (exclure la featured si présente)
+      const otherResources = featuredResource
+        ? filteredResources.filter(r => r.id !== featuredResource.id)
+        : filteredResources;
+
+      return (
+        <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
+          <Header />
+          <Hero />
+          <SearchBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedTag={selectedTag}
+            setSelectedTag={setSelectedTag}
+            tags={allTags}
+          />
+
+          {/* Section Featured Resource (si URL avec #id=) */}
+          {featuredResource && !searchTerm && !selectedTag && (
+            <FeaturedResource resource={featuredResource} />
+          )}
+
+          <main className="flex-grow pb-8">
+            {isLoading ? (
+              <div className="py-12 text-center">
+                <p className="text-[#86868B] text-lg">Chargement des ressources...</p>
+              </div>
+            ) : (
+              <section className="w-full py-3 bg-[#F5F5F7]">
+                <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
+                  <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">
+                    {searchTerm || selectedTag ? "Résultats de recherche" : "Ressources les plus récentes"}
+                  </h2>
+                </div>
+
+                <div className="max-w-[1000px] mx-auto w-full px-4 md:px-6">
+                  {otherResources.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {otherResources.map((resource, index) => (
+                        <AppleCardWithNavigation key={resource.id} resource={resource} index={index} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </main>
+
+          <Footer />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
