@@ -618,7 +618,7 @@
             {/* Cover Container - Clic ouvre la vidéo */}
             <div
               onClick={handleCoverClick}
-              className="w-full h-[300px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
+              className="w-full aspect-[4/5] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
             >
               {/* Cover depuis covers.js (Google Drive) */}
               {(() => {
@@ -631,7 +631,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="w-full h-full object-contain transition-opacity duration-300"
+                      className="w-full h-full object-cover transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       onLoad={(e) => {
@@ -1001,7 +1001,7 @@
                   e.stopPropagation();
                   handleCoverClick();
                 }}
-                className="w-full h-[300px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
+                className="w-full aspect-[4/5] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
               >
                 {/* Cover image */}
                 {(() => {
@@ -1014,7 +1014,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="w-full h-full object-contain transition-opacity duration-300"
+                        className="w-full h-full object-cover transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         onLoad={(e) => {
