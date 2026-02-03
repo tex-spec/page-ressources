@@ -1121,35 +1121,32 @@
       const featuredResource = resources.find(r => r.id === selectedResourceId);
 
       // Créer une liste des 4 premiers featured (ceux affichés sur la page d'accueil)
+      // Si aucune ressource n'a isFeatured=true, on prend les 4 premières (triées par date)
       const featuredListMain = useMemo(() => {
-        return resources.filter(r => r.isFeatured).slice(0, 4);
+        const featuredOnes = resources.filter(r => r.isFeatured);
+        if (featuredOnes.length > 0) {
+          return featuredOnes.slice(0, 4);
+        }
+        // Fallback: prendre les 4 premières ressources (déjà triées par date)
+        return resources.slice(0, 4);
       }, [resources]);
 
-      // Filtrer les autres ressources
-      // - Page featured: afficher les autres ressources du groupe des 4 premiers featured
-      // - Page d'accueil: afficher les 4 premiers featured (ou tous les filteredResources si search/tag)
+      // Filtrer les ressources à afficher
       const otherResources = useMemo(() => {
         if (featuredResource) {
-          // Page featured: afficher SEULEMENT les 3 autres ressources du groupe des 4 premiers featured
-          // On affiche les 3 premières cartes qui ne sont pas la featured
-          const others = [];
-          for (let i = 0; i < featuredListMain.length && others.length < 3; i++) {
-            if (featuredListMain[i].id !== featuredResource.id) {
-              others.push(featuredListMain[i]);
-            }
-          }
-          return others;
+          // Page featured: afficher toutes les autres ressources sauf la featured
+          return resources.filter(r => r.id !== featuredResource.id);
         } else {
           // Page d'accueil ou résultats de recherche
           if (searchTerm || selectedTag) {
-            // Si y a une recherche/tag, afficher tous les résultats filtrés
+            // Si y a une recherche/tag, afficher les résultats filtrés
             return filteredResources;
           } else {
-            // Page d'accueil: afficher les 4 premiers featured
-            return featuredListMain;
+            // Page d'accueil: afficher TOUTES les ressources
+            return resources;
           }
         }
-      }, [featuredResource, searchTerm, selectedTag, filteredResources, featuredListMain]);
+      }, [featuredResource, searchTerm, selectedTag, filteredResources, resources]);
 
       return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
