@@ -765,13 +765,13 @@
       return (
         <>
           <section className="bg-white py-8 md:py-12 px-4 md:px-6 border-b border-black/5">
-            <div className="max-w-[1000px] mx-auto">
+            <div className="max-w-[800px] mx-auto">
               <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-0">
 
-                  {/* Colonne gauche: Cover Image (cliquable pour vidéo) */}
+                  {/* Colonne gauche: Cover Image (1/3 - cliquable pour vidéo) */}
                   <div
-                    className={`relative aspect-[3/4] md:aspect-auto md:min-h-[400px] cursor-pointer group ${coverClass}`}
+                    className={`relative aspect-[3/4] cursor-pointer group ${coverClass}`}
                     onClick={handleCoverClick}
                   >
                     {/* Skeleton loader */}
@@ -788,11 +788,13 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover z-10"
                             onLoad={(e) => {
                               e.target.style.opacity = '1';
                               const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
                               if (skeleton) skeleton.style.display = 'none';
+                              const fallback = e.target.parentElement.querySelector('.fallback-letter');
+                              if (fallback) fallback.style.display = 'none';
                             }}
                             onError={(e) => {
                               e.target.style.display = 'none';
@@ -807,7 +809,7 @@
                     })()}
 
                     {/* Fallback gradient avec lettre */}
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="fallback-letter absolute inset-0 flex items-center justify-center">
                       <div className="text-white/20 text-8xl font-bold">
                         {resource.title.charAt(0).toUpperCase()}
                       </div>
@@ -815,9 +817,9 @@
 
                     {/* Play Button Overlay */}
                     {resource.vimeoUrl && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="h-16 w-16 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                          <svg className="h-7 w-7 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                        <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                          <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
                           </svg>
                         </div>
@@ -825,10 +827,10 @@
                     )}
                   </div>
 
-                  {/* Colonne droite: Titre, description, CTA */}
+                  {/* Colonne droite: Titre, description, CTA (2/3) */}
                   <div className="flex flex-col justify-center p-6 md:p-10">
                     {/* Titre XL en noir */}
-                    <h2 className="text-[28px] md:text-[40px] font-bold text-[#1d1d1f] leading-[1.1] tracking-[-0.4px] mb-4">
+                    <h2 className="text-[32px] md:text-[44px] font-bold text-[#1d1d1f] leading-[1.1] tracking-[-0.4px] mb-4">
                       {resource.title}
                     </h2>
 
@@ -845,12 +847,12 @@
                       </span>
                     </div>
 
-                    {/* Bouton CTA bleu */}
+                    {/* Bouton CTA bleu - pas full width */}
                     <a
                       href={resource.linkToTool}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg"
+                      className="inline-flex items-center justify-center self-start px-10 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg"
                     >
                       Accès immédiat à la ressource
                       <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -881,9 +883,38 @@
     // ============================================
     function Footer() {
       return (
-        <footer className="bg-[#0b0d0d] py-8 px-6">
-          <div className="max-w-[1000px] mx-auto text-center">
-            <p className="text-[#6e6e73] text-sm">
+        <footer className="bg-[#0b0d0d] py-12 px-6">
+          <div className="max-w-[1000px] mx-auto">
+            {/* Navigation links */}
+            <div className="flex flex-wrap justify-center gap-6 mb-6">
+              <a
+                href="https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                Mentions légales
+              </a>
+              <span className="text-[#3a3a3c]">|</span>
+              <a
+                href="https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                CGV
+              </a>
+              <span className="text-[#3a3a3c]">|</span>
+              <a
+                href="mailto:tex@texheyit.com"
+                className="text-[#8a8a8e] hover:text-white text-sm transition-colors"
+              >
+                Contact
+              </a>
+            </div>
+
+            {/* Copyright */}
+            <p className="text-[#6e6e73] text-sm text-center">
               © 2026 Samurai Marketing. Tous droits réservés.
             </p>
           </div>
