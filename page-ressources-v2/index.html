@@ -634,7 +634,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                      className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%+20px)] transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       width="300"
@@ -764,7 +764,7 @@
 
       return (
         <>
-          <section className="bg-white py-8 md:py-12 px-4 md:px-6 border-b border-black/5">
+          <section className="bg-white py-[30px] px-4 md:px-6 border-b border-black/5">
             <div className="max-w-[800px] mx-auto">
               <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-0">
@@ -788,7 +788,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover z-10"
+                            className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%+20px)] z-10"
                             onLoad={(e) => {
                               e.target.style.opacity = '1';
                               const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
@@ -1038,7 +1038,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        className="absolute inset-0 w-full h-full object-cover object-[center_calc(50%+20px)] transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         width="300"
@@ -1177,7 +1177,7 @@
               <section className="w-full py-3 bg-[#F5F5F7]">
                 <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
                   <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">
-                    {searchTerm || selectedTag ? "Résultats de recherche" : (featuredResource ? "Autres ressources" : "Ressources les plus récentes")}
+                    {searchTerm || selectedTag ? "Résultats de recherche" : "Ressources les plus récentes"}
                   </h2>
                 </div>
 
