@@ -20,25 +20,10 @@
 
     /* Gold Gradient Text */
     .gold-gradient {
-      background: linear-gradient(
-        135deg,
-        #B8860B 0%,
-        #C9A227 25%,
-        #D4AF37 50%,
-        #FFD700 75%,
-        #C9A227 100%
-      );
+      background: linear-gradient(90deg, #d4a84b, #e8c068);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      background-size: 200% auto;
-      animation: gold-shimmer 3s ease-in-out infinite;
-    }
-
-    @keyframes gold-shimmer {
-      0% { background-position: 0% center; }
-      50% { background-position: 100% center; }
-      100% { background-position: 0% center; }
     }
 
     /* Scrollbar styling */
@@ -384,37 +369,37 @@
     }
 
     // ============================================
-    // COMPOSANT: Hero (avec logo + CTA)
+    // COMPOSANT: Hero (Apple style)
     // ============================================
     function Hero() {
       return (
-        <section className="bg-[#0b0d0d] pt-4 pb-4 px-4 md:px-8 w-full">
-          <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-2">
-            {/* Logo icône seul */}
+        <section className="bg-[#1a1a1a] pt-10 pb-9 md:pt-14 md:pb-12 px-4 md:px-8 w-full">
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+            {/* Logo icône */}
             <img
               src="Logo-icon.png"
               alt="Samurai Marketing"
-              className="h-7 md:h-8 w-auto mb-2"
+              className="h-10 w-auto"
             />
 
-            {/* Accroche avec dégradé doré */}
-            <h1 className="text-[36px] md:text-[40px] font-bold tracking-tight text-white leading-[1.2]">
-              Tu génères déjà des revenus. Mais <span className="gold-gradient">tout repose encore sur toi</span>.
-            </h1>
-
-            {/* Sous-titre */}
-            <p className="text-sm md:text-base font-medium text-[#86868b] leading-relaxed max-w-2xl">
-              Découvre comment les entrepreneurs atypiques créent un Allié IA entraîné sur <span className="font-bold text-[#f5f5f7]">leur GÉNIE</span> — pour déléguer 80% du répétitif sans perdre ce qui les rend uniques.
+            {/* Setup (petit) */}
+            <p className="mt-8 md:mt-10 text-[17px] md:text-[20px] font-semibold text-[#f5f5f7] leading-[1.4]">
+              Tu génères déjà. Mais <span className="gold-gradient">tout repose sur toi</span>.
             </p>
 
-            {/* CTA - Bouton bleu arrondi */}
+            {/* Punchline (gros) */}
+            <h1 className="mt-3 md:mt-4 text-[32px] md:text-[48px] font-bold text-[#f5f5f7] leading-[1.1] tracking-[-0.02em]">
+              Délègue 80% à l'IA. Garde <span className="gold-gradient">ton génie</span>.
+            </h1>
+
+            {/* CTA - Bouton Apple */}
             <a
               href="https://www.samurai-marketing.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 px-6 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base"
+              className="mt-7 md:mt-8 px-8 py-4 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
             >
-              Accéder à la mini-formation
+              Découvrir comment
             </a>
           </div>
         </section>
@@ -653,13 +638,6 @@
                   </div>
                 </div>
               )}
-
-              {/* Tag Badge */}
-              <div className="absolute top-3 left-3">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/50 text-white backdrop-blur-sm">
-                  {resource.tags[0]}
-                </span>
-              </div>
             </div>
 
             {/* Content */}
