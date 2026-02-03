@@ -654,14 +654,19 @@
               })()}
 
               {/* Fallback gradient avec lettre */}
-              <div
-                className="fallback-gradient absolute inset-0 flex items-center justify-center"
-                style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
-              >
-                <div className="text-white/20 text-8xl font-bold">
-                  {resource.title.charAt(0).toUpperCase()}
-                </div>
-              </div>
+              {(() => {
+                const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                return (
+                  <div
+                    className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                    style={{ display: hasCover ? 'none' : 'flex' }}
+                  >
+                    <div className="text-white/20 text-8xl font-bold">
+                      {resource.title.charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Play Button Overlay */}
               {resource.vimeoUrl && (
@@ -692,7 +697,7 @@
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                    {resource.ctaKeyword}
+                    {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                   </span>
                 </div>
                 <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -708,7 +713,7 @@
             vimeoUrl={resource.vimeoUrl}
             linkToTool={resource.linkToTool}
             title={resource.title}
-            ctaKeyword={resource.ctaKeyword}
+            ctaKeyword={resource.ctaKeyword || resource.tags?.[0] || 'IA'}
           />
         </>
       );
@@ -788,11 +793,19 @@
                     })()}
 
                     {/* Fallback gradient avec lettre */}
-                    <div className="fallback-letter absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900" style={{display: 'none'}}>
-                      <div className="text-white/20 text-8xl font-bold">
-                        {resource.title.charAt(0).toUpperCase()}
-                      </div>
-                    </div>
+                    {(() => {
+                      const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                      return (
+                        <div
+                          className={`fallback-letter absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                          style={{display: hasCover ? 'none' : 'flex'}}
+                        >
+                          <div className="text-white/20 text-8xl font-bold">
+                            {resource.title.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Play Button Overlay */}
                     {resource.vimeoUrl && (
@@ -822,7 +835,7 @@
                     <div className="flex items-center gap-3 mb-6">
                       <span className="text-[12px] text-[#86868B] font-medium">Mot-clé:</span>
                       <span className="px-3 py-1.5 rounded-full text-[12px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                        {resource.ctaKeyword}
+                        {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                       </span>
                     </div>
 
@@ -1043,14 +1056,19 @@
                 })()}
 
                 {/* Fallback gradient */}
-                <div
-                  className="fallback-gradient absolute inset-0 flex items-center justify-center"
-                  style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
-                >
-                  <div className="text-white/20 text-8xl font-bold">
-                    {resource.title.charAt(0).toUpperCase()}
-                  </div>
-                </div>
+                {(() => {
+                  const hasCover = (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId || resource.coverUrl;
+                  return (
+                    <div
+                      className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                      style={{ display: hasCover ? 'none' : 'flex' }}
+                    >
+                      <div className="text-white/20 text-8xl font-bold">
+                        {resource.title.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Play Button Overlay */}
                 {resource.vimeoUrl && (
@@ -1084,7 +1102,7 @@
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                      {resource.ctaKeyword}
+                      {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                     </span>
                   </div>
                   <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1100,7 +1118,7 @@
               vimeoUrl={resource.vimeoUrl}
               linkToTool={resource.linkToTool}
               title={resource.title}
-              ctaKeyword={resource.ctaKeyword}
+              ctaKeyword={resource.ctaKeyword || resource.tags?.[0] || 'IA'}
             />
           </>
         );
