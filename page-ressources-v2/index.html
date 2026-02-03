@@ -388,36 +388,31 @@
     // ============================================
     function Hero() {
       return (
-        <section className="bg-[#1a1a1a] pt-8 pb-8 px-5 md:pt-12 md:pb-10 w-full">
-          <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
-            {/* Logo - Desktop: icône + texte, Mobile: icône seule */}
-            <div className="flex items-center gap-3 mb-5 md:mb-6">
-              <img
-                src="Logo-icon.png"
-                alt="Samurai Marketing"
-                className="h-8 md:h-10 w-auto"
-              />
-              <span className="hidden md:block text-[#f5f5f5] text-sm font-semibold tracking-widest">
-                SAMURAI MARKETING
-              </span>
-            </div>
+        <section className="bg-[#0b0d0d] pt-4 pb-4 px-4 md:px-8 w-full">
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-2">
+            {/* Logo icône seul */}
+            <img
+              src="Logo-icon.png"
+              alt="Samurai Marketing"
+              className="h-10 md:h-12 w-auto mb-2"
+            />
 
-            {/* Accroche */}
-            <h1 className="text-[24px] md:text-[32px] font-normal text-[#f5f5f5] leading-tight">
-              Tu génères déjà des revenus. Mais <span className="font-bold text-[#d4a84b]">tout repose encore sur toi</span>.
+            {/* Accroche avec dégradé doré */}
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white leading-[1.2]">
+              Tu génères déjà des revenus. Mais <span className="gold-gradient">tout repose encore sur toi</span>.
             </h1>
 
             {/* Sous-titre */}
-            <p className="mt-4 md:mt-5 text-[16px] md:text-[18px] font-normal text-[#f5f5f5] leading-relaxed">
-              Découvre comment les entrepreneurs atypiques créent un Allié IA entraîné sur <span className="font-bold text-[#d4a84b]">leur génie</span> — pour déléguer 80% du répétitif sans perdre ce qui les rend uniques.
+            <p className="text-sm md:text-base font-normal text-[#86868b] leading-relaxed max-w-2xl">
+              Découvre comment les entrepreneurs atypiques créent un Allié IA entraîné sur <span className="font-bold text-[#f5f5f7]">leur GÉNIE</span> — pour déléguer 80% du répétitif sans perdre ce qui les rend uniques.
             </p>
 
-            {/* CTA */}
+            {/* CTA - Bouton bleu arrondi */}
             <a
               href="https://www.samurai-marketing.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 md:mt-6 px-8 py-4 bg-[#d4a84b] hover:bg-[#e8c068] text-[#1a1a1a] font-semibold text-[16px] rounded-lg transition-all duration-300"
+              className="mt-2 px-6 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base"
             >
               Accéder à la mini-formation
             </a>
