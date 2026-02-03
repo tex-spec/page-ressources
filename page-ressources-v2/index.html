@@ -618,7 +618,7 @@
             {/* Cover Container - Clic ouvre la vidéo */}
             <div
               onClick={handleCoverClick}
-              className="w-full aspect-[4/5] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
+              className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
             >
               {/* Cover depuis covers.js (Google Drive) */}
               {(() => {
@@ -764,9 +764,9 @@
               <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-0">
 
-                  {/* Colonne gauche: Cover Image - hauteur fixe 300px */}
+                  {/* Colonne gauche: Cover Image - aspect ratio 4:5 */}
                   <div
-                    className="relative h-[300px] cursor-pointer group overflow-hidden bg-transparent"
+                    className="relative aspect-[4/5] cursor-pointer group overflow-hidden bg-transparent"
                     onClick={handleCoverClick}
                   >
                     {/* Cover image */}
@@ -780,7 +780,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-contain"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         );
                       }
@@ -1001,7 +1001,7 @@
                   e.stopPropagation();
                   handleCoverClick();
                 }}
-                className="w-full aspect-[4/5] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
+                className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
               >
                 {/* Cover image */}
                 {(() => {
