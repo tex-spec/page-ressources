@@ -43,9 +43,9 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Gold Gradient Text */
+    /* Gold Gradient Text - Match samurai-marketing.com */
     .gold-gradient {
-      background: linear-gradient(90deg, #d4a84b, #e8c068);
+      background: linear-gradient(90deg, #7e5d1d, #e0bc79, #7e5d1d);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -107,6 +107,37 @@
     .scrollbar-hide {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+
+    /* Detail view animations */
+    .detail-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    .detail-exit {
+      animation: slideOutRight 0.3s ease-in;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(20px);
+      }
     }
   </style>
 
@@ -371,7 +402,7 @@
         <section
           className="pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-fixed bg-center bg-cover"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('bg-blur-2.webp')`
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('BG-blur-checkout1.png')`
           }}
         >
           <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
@@ -546,7 +577,7 @@
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-full bg-[#0071e3] hover:bg-[#0077ed] py-2.5 rounded-full transition-colors shadow-lg"
                 >
-                  <span className="text-white text-base font-medium">Crée gratuitement ton Allié IA</span>
+                  <span className="text-white text-base font-medium">Découvre comment</span>
                 </a>
               </div>
 
@@ -718,6 +749,134 @@
     }
 
     // ============================================
+    // COMPOSANT: FeaturedResource (Section mise en avant)
+    // S'insère entre les tags et la grille
+    // ============================================
+    function FeaturedResource({ resource }) {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const coverClass = getCoverClass(resource.tags);
+
+      const handleCoverClick = () => {
+        if (resource.vimeoUrl) {
+          setIsModalOpen(true);
+        }
+      };
+
+      return (
+        <>
+          <section className="bg-white py-8 md:py-12 px-4 md:px-6 border-b border-black/5">
+            <div className="max-w-[1000px] mx-auto">
+              <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+
+                  {/* Colonne gauche: Cover Image (cliquable pour vidéo) */}
+                  <div
+                    className={`relative aspect-[3/4] md:aspect-auto md:min-h-[400px] cursor-pointer group ${coverClass}`}
+                    onClick={handleCoverClick}
+                  >
+                    {/* Skeleton loader */}
+                    <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+
+                    {/* Cover image */}
+                    {(() => {
+                      const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                      const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w500-h600-c` : null;
+                      const finalUrl = coverUrl || gdriveUrl;
+
+                      if (finalUrl) {
+                        return (
+                          <img
+                            src={finalUrl}
+                            alt={resource.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onLoad={(e) => {
+                              e.target.style.opacity = '1';
+                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                              if (skeleton) skeleton.style.display = 'none';
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                              if (skeleton) skeleton.style.display = 'none';
+                            }}
+                            style={{ opacity: 0 }}
+                          />
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Fallback gradient avec lettre */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-white/20 text-8xl font-bold">
+                        {resource.title.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+
+                    {/* Play Button Overlay */}
+                    {resource.vimeoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="h-16 w-16 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                          <svg className="h-7 w-7 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Colonne droite: Titre, description, CTA */}
+                  <div className="flex flex-col justify-center p-6 md:p-10">
+                    {/* Titre XL en noir */}
+                    <h2 className="text-[28px] md:text-[40px] font-bold text-[#1d1d1f] leading-[1.1] tracking-[-0.4px] mb-4">
+                      {resource.title}
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed mb-6">
+                      {resource.shortDescription}
+                    </p>
+
+                    {/* Mot-clé CTA doré */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-[12px] text-[#86868B] font-medium">Mot-clé:</span>
+                      <span className="px-3 py-1.5 rounded-full text-[12px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                        {resource.ctaKeyword}
+                      </span>
+                    </div>
+
+                    {/* Bouton CTA bleu */}
+                    <a
+                      href={resource.linkToTool}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg"
+                    >
+                      Accès immédiat à la ressource
+                      <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Modal vidéo */}
+          <VideoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            vimeoUrl={resource.vimeoUrl}
+            linkToTool={resource.linkToTool}
+            title={resource.title}
+            ctaKeyword={resource.ctaKeyword}
+          />
+        </>
+      );
+    }
+
+    // ============================================
     // COMPOSANT: Footer
     // ============================================
     function Footer() {
@@ -733,6 +892,17 @@
     }
 
     // ============================================
+    // FONCTION: Extraire resourceId du hash
+    // ============================================
+    function getResourceIdFromHash() {
+      const hash = window.location.hash.substring(1);
+      if (hash.startsWith('id=')) {
+        return hash.substring(3);
+      }
+      return null;
+    }
+
+    // ============================================
     // APP PRINCIPALE
     // ============================================
     function App() {
@@ -740,6 +910,7 @@
       const [selectedTag, setSelectedTag] = useState(null);
       const [resources, setResources] = useState(FALLBACK_RESOURCES);
       const [isLoading, setIsLoading] = useState(true);
+      const [selectedResourceId, setSelectedResourceId] = useState(getResourceIdFromHash());
 
       // Fonction pour dédoublonner par titre
       const deduplicateResources = (data) => {
@@ -768,6 +939,162 @@
         loadData();
       }, []);
 
+      // Écouter les changements de hash (navigation fluide)
+      useEffect(() => {
+        const handleHashChange = () => {
+          const resourceId = getResourceIdFromHash();
+          setSelectedResourceId(resourceId);
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+      }, []);
+
+      // Fonction pour naviguer vers une ressource
+      const navigateToResource = (resourceId) => {
+        window.location.hash = `id=${resourceId}`;
+        setSelectedResourceId(resourceId);
+      };
+
+      // Fonction pour retourner à la liste
+      const handleBackToList = () => {
+        window.location.hash = '';
+        setSelectedResourceId(null);
+      };
+
+      // Modifier AppleCard pour avoir un onClick qui navigue
+      function AppleCardWithNavigation({ resource, index }) {
+        const [isModalOpen, setIsModalOpen] = useState(false);
+
+        const handleCoverClick = () => {
+          if (resource.vimeoUrl) {
+            setIsModalOpen(true);
+          }
+        };
+
+        const handleCtaClick = (e) => {
+          e.stopPropagation();
+          navigateToResource(resource.id);
+        };
+
+        const coverClass = getCoverClass(resource.tags);
+
+        return (
+          <>
+            <div
+              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+              onClick={() => navigateToResource(resource.id)}
+            >
+              {/* Cover Container */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCoverClick();
+                }}
+                className={`w-full overflow-hidden relative aspect-[3/4] cursor-pointer ${coverClass}`}
+              >
+                {/* Skeleton loader */}
+                <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+
+                {/* Cover image */}
+                {(() => {
+                  const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w300-h400-c` : null;
+                  const finalUrl = coverUrl || gdriveUrl;
+
+                  if (finalUrl) {
+                    return (
+                      <img
+                        src={finalUrl}
+                        alt={resource.title}
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        loading={index < 4 ? "eager" : "lazy"}
+                        decoding="async"
+                        width="300"
+                        height="400"
+                        onLoad={(e) => {
+                          e.target.style.opacity = '1';
+                          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                          if (skeleton) skeleton.style.display = 'none';
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+                          if (skeleton) skeleton.style.display = 'none';
+                          const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                        style={{ opacity: 0 }}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Fallback gradient */}
+                <div
+                  className="fallback-gradient absolute inset-0 flex items-center justify-center"
+                  style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
+                >
+                  <div className="text-white/20 text-8xl font-bold">
+                    {resource.title.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+
+                {/* Play Button Overlay */}
+                {resource.vimeoUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                      <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="p-4 md:p-5 flex flex-col flex-grow">
+                <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+                  {resource.title}
+                </h3>
+                <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+                  {resource.shortDescription}
+                </p>
+
+                {/* Footer - Naviguer vers la ressource */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCtaClick(e);
+                  }}
+                  className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
+                      {resource.ctaKeyword}
+                    </span>
+                  </div>
+                  <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <VideoModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              vimeoUrl={resource.vimeoUrl}
+              linkToTool={resource.linkToTool}
+              title={resource.title}
+              ctaKeyword={resource.ctaKeyword}
+            />
+          </>
+        );
+      }
+
       const allTags = useMemo(() => {
         const tags = new Set();
         resources.forEach(r => r.tags && r.tags.forEach(t => tags.add(t)));
@@ -785,10 +1112,13 @@
         });
       }, [searchTerm, selectedTag, resources]);
 
-      const featuredResources = useMemo(() =>
-        filteredResources.filter(r => r.isFeatured),
-        [filteredResources]
-      );
+      // Trouver la ressource sélectionnée (pour featured section)
+      const featuredResource = resources.find(r => r.id === selectedResourceId);
+
+      // Filtrer les autres ressources (exclure la featured si présente)
+      const otherResources = featuredResource
+        ? filteredResources.filter(r => r.id !== featuredResource.id)
+        : filteredResources;
 
       return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
@@ -802,21 +1132,38 @@
             tags={allTags}
           />
 
+          {/* Section Featured Resource (si URL avec #id=) */}
+          {featuredResource && !searchTerm && !selectedTag && (
+            <FeaturedResource resource={featuredResource} />
+          )}
+
           <main className="flex-grow pb-8">
             {isLoading ? (
               <div className="py-12 text-center">
                 <p className="text-[#86868B] text-lg">Chargement des ressources...</p>
               </div>
-            ) : searchTerm || selectedTag ? (
-              <ResourceGrid
-                title="Résultats de recherche"
-                resources={filteredResources}
-              />
             ) : (
-              <ResourceGrid
-                title="Ressources les plus récentes"
-                resources={resources}
-              />
+              <section className="w-full py-3 bg-[#F5F5F7]">
+                <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
+                  <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">
+                    {searchTerm || selectedTag ? "Résultats de recherche" : (featuredResource ? "Autres ressources" : "Ressources les plus récentes")}
+                  </h2>
+                </div>
+
+                <div className="max-w-[1000px] mx-auto w-full px-4 md:px-6">
+                  {otherResources.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {otherResources.map((resource, index) => (
+                        <AppleCardWithNavigation key={resource.id} resource={resource} index={index} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
             )}
           </main>
 
