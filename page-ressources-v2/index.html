@@ -618,7 +618,7 @@
             {/* Cover Container - Clic ouvre la vidéo */}
             <div
               onClick={handleCoverClick}
-              className="w-full h-[420px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px]"
+              className="w-full h-[420px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
             >
               {/* Cover depuis covers.js (Google Drive) */}
               {(() => {
@@ -631,7 +631,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="w-full h-full object-cover object-bottom transition-opacity duration-300"
+                      className="w-full h-full object-contain transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       onLoad={(e) => {
@@ -766,7 +766,7 @@
 
                   {/* Colonne gauche: Cover Image - hauteur fixe 300px */}
                   <div
-                    className="relative h-[300px] cursor-pointer group overflow-hidden"
+                    className="relative h-[300px] cursor-pointer group overflow-hidden bg-transparent"
                     onClick={handleCoverClick}
                   >
                     {/* Cover image */}
@@ -780,7 +780,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover object-bottom"
+                            className="absolute inset-0 w-full h-full object-contain"
                           />
                         );
                       }
@@ -1001,7 +1001,7 @@
                   e.stopPropagation();
                   handleCoverClick();
                 }}
-                className="w-full h-[420px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px]"
+                className="w-full h-[420px] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent"
               >
                 {/* Cover image */}
                 {(() => {
@@ -1014,7 +1014,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="w-full h-full object-cover object-bottom transition-opacity duration-300"
+                        className="w-full h-full object-contain transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         onLoad={(e) => {
@@ -1120,10 +1120,36 @@
       // Trouver la ressource sélectionnée (pour featured section)
       const featuredResource = resources.find(r => r.id === selectedResourceId);
 
-      // Filtrer les autres ressources (exclure la featured si présente)
-      const otherResources = featuredResource
-        ? filteredResources.filter(r => r.id !== featuredResource.id)
-        : filteredResources;
+      // Créer une liste des 4 premiers featured (ceux affichés sur la page d'accueil)
+      const featuredListMain = useMemo(() => {
+        return resources.filter(r => r.isFeatured).slice(0, 4);
+      }, [resources]);
+
+      // Filtrer les autres ressources
+      // - Page featured: afficher les autres ressources du groupe des 4 premiers featured
+      // - Page d'accueil: afficher les 4 premiers featured (ou tous les filteredResources si search/tag)
+      const otherResources = useMemo(() => {
+        if (featuredResource) {
+          // Page featured: afficher SEULEMENT les 3 autres ressources du groupe des 4 premiers featured
+          // On affiche les 3 premières cartes qui ne sont pas la featured
+          const others = [];
+          for (let i = 0; i < featuredListMain.length && others.length < 3; i++) {
+            if (featuredListMain[i].id !== featuredResource.id) {
+              others.push(featuredListMain[i]);
+            }
+          }
+          return others;
+        } else {
+          // Page d'accueil ou résultats de recherche
+          if (searchTerm || selectedTag) {
+            // Si y a une recherche/tag, afficher tous les résultats filtrés
+            return filteredResources;
+          } else {
+            // Page d'accueil: afficher les 4 premiers featured
+            return featuredListMain;
+          }
+        }
+      }, [featuredResource, searchTerm, selectedTag, filteredResources, featuredListMain]);
 
       return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
@@ -1161,7 +1187,7 @@
                       <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className={`grid gap-4 ${featuredResource ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
                       {otherResources.map((resource, index) => (
                         <AppleCardWithNavigation key={resource.id} resource={resource} index={index} />
                       ))}
