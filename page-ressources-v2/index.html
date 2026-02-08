@@ -433,56 +433,15 @@
 
     // ============================================
     // COMPOSANT: SearchBar (full width, 2 lignes de tags)
-    // Avec effet hide on scroll down, show on scroll up (mobile only)
     // ============================================
     function SearchBar({ searchTerm, setSearchTerm, selectedTag, setSelectedTag, tags }) {
-      const [isVisible, setIsVisible] = useState(true);
-      const [lastScrollY, setLastScrollY] = useState(0);
-
-      // Détecter la direction du scroll (mobile only)
-      useEffect(() => {
-        const handleScroll = () => {
-          // Seulement sur mobile (< 768px)
-          if (window.innerWidth >= 768) {
-            setIsVisible(true);
-            return;
-          }
-
-          const currentScrollY = window.scrollY;
-          const scrollDelta = currentScrollY - lastScrollY;
-
-          // Seuil minimum pour éviter les micro-mouvements
-          if (Math.abs(scrollDelta) < 10) return;
-
-          if (currentScrollY < 100) {
-            // Toujours visible en haut de page
-            setIsVisible(true);
-          } else if (scrollDelta > 0) {
-            // Scroll vers le bas → cacher
-            setIsVisible(false);
-          } else {
-            // Scroll vers le haut → montrer
-            setIsVisible(true);
-          }
-
-          setLastScrollY(currentScrollY);
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-      }, [lastScrollY]);
-
       // Split tags into 2 rows
       const midPoint = Math.ceil(tags.length / 2);
       const row1Tags = tags.slice(0, midPoint);
       const row2Tags = tags.slice(midPoint);
 
       return (
-        <div
-          className={`sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2 transition-transform duration-300 ease-out ${
-            isVisible ? 'translate-y-0' : '-translate-y-full'
-          } md:translate-y-0`}
-        >
+        <div className="sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2">
           <div className="max-w-[1000px] mx-auto px-4 md:px-6 space-y-2">
 
             {/* Search Input - Full Width */}
@@ -677,7 +636,7 @@
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="w-full h-full object-cover transition-opacity duration-300"
+                      className="w-full h-full object-cover object-top transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
                       onLoad={(e) => {
@@ -836,7 +795,7 @@
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover object-top"
                           />
                         );
                       }
@@ -1090,7 +1049,7 @@
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="w-full h-full object-cover transition-opacity duration-300"
+                        className="w-full h-full object-cover object-top transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         onLoad={(e) => {
@@ -1215,21 +1174,19 @@
 
       // Filtrer les ressources à afficher
       const otherResources = useMemo(() => {
-        // Si recherche ou tag sélectionné, TOUJOURS utiliser les résultats filtrés
-        if (searchTerm || selectedTag) {
-          // Exclure la featured resource si elle existe
-          if (featuredResource) {
-            return filteredResources.filter(r => r.id !== featuredResource.id);
-          }
-          return filteredResources;
-        }
-
-        // Sinon, afficher toutes les ressources (sauf featured si présente)
         if (featuredResource) {
+          // Page featured: afficher toutes les autres ressources sauf la featured
           return resources.filter(r => r.id !== featuredResource.id);
+        } else {
+          // Page d'accueil ou résultats de recherche
+          if (searchTerm || selectedTag) {
+            // Si y a une recherche/tag, afficher les résultats filtrés
+            return filteredResources;
+          } else {
+            // Page d'accueil: afficher TOUTES les ressources
+            return resources;
+          }
         }
-
-        return resources;
       }, [featuredResource, searchTerm, selectedTag, filteredResources, resources]);
 
       return (
