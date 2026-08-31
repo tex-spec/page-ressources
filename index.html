@@ -17,22 +17,30 @@
   <meta name="theme-color" content="#1a1a1a">
 
   <!-- Open Graph (Facebook, LinkedIn) -->
-  <meta property="og:title" content="Délègue 80% à l'IA. Garde ton génie.">
-  <meta property="og:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA.">
-  <meta property="og:image" content="https://ressources.samurai-marketing.com/og-image.jpg">
+  <meta property="og:title" content="Délègue 80% à l'IA. Garde ton génie. | Samurai Marketing">
+  <meta property="og:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA — sans perdre leur identité ni se noyer dans les outils.">
+  <meta property="og:image" content="https://ressources.samurai-marketing.com/social-share.png">
+  <meta property="og:image:width" content="2832">
+  <meta property="og:image:height" content="1916">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="Ressources IA Samurai Marketing — Délègue 80% à l'IA, garde ton génie">
   <meta property="og:url" content="https://ressources.samurai-marketing.com/">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Samurai Marketing">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@texheyit">
   <meta name="twitter:title" content="Délègue 80% à l'IA. Garde ton génie.">
-  <meta name="twitter:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA.">
-  <meta name="twitter:image" content="https://ressources.samurai-marketing.com/og-image.jpg">
+  <meta name="twitter:description" content="Ressources gratuites pour entrepreneurs atypiques qui veulent amplifier leur génie avec l'IA — sans perdre leur identité ni se noyer dans les outils.">
+  <meta name="twitter:image" content="https://ressources.samurai-marketing.com/social-share.png">
+  <meta name="twitter:image:alt" content="Ressources IA Samurai Marketing">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.21.0/babel.min.js"></script>
   <script src="covers.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,18 +163,213 @@
       }
     }
   </script>
+  <script>
+    window.RESOURCE_HUB_GHL_WEBHOOK_URL = "/api/track-resource";
+  </script>
 </head>
 <body class="bg-[#F5F5F7]">
   <div id="root"></div>
 
-  <script type="text/babel">
+  <script type="text/babel" data-presets="react">
+    /* @jsxRuntime classic */
     const { useState, useMemo, useEffect } = React;
 
     // ============================================
-    // CONFIGURATION API - Google Sheet
+    // CONFIGURATION DATA - Google Sheet
     // ============================================
-    // IMPORTANT: Remplace cette URL par celle de ton déploiement Apps Script
-    const API_URL = "https://script.google.com/macros/s/AKfycbyXt5H4hj0hvA4PaRh_SZMPBt48hjb5KnULO3RIbwSb8swIu0PaaivNFX0tOi4BO23S/exec";
+    // Source de vérité : export CSV public du tableur.
+    // On lit directement la feuille pour éviter la latence du script Apps Script
+    // et pour conserver les identifiants stables déjà utilisés dans les URL #id=RES...
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1a1liM_3O4E3_3tqoxHwHfEcXf8Td78mI8xWbmj8j1Qg/export?format=csv&gid=0";
+    const FETCH_TIMEOUT_MS = 20000;
+
+
+    // ============================================
+    // TRACKING FUNNEL DM / CONVERSATION AI
+    // ============================================
+    // Le webhook est volontairement configurable côté runtime/build afin de ne jamais exposer
+    // un token GHL dans le front. En prod, définir window.RESOURCE_HUB_GHL_WEBHOOK_URL
+    // avant ce script, ou injecter la valeur via Vercel/env au build.
+    const GHL_TRACKING_WEBHOOK_URL = window.RESOURCE_HUB_GHL_WEBHOOK_URL || "";
+    const CHALLENGE_URL = "https://www.samurai-marketing.com/";
+    const TRACKING_STORAGE_KEY = "samurai_resource_hub_tracking";
+
+    function getTrackingParams() {
+      const params = new URLSearchParams(window.location.search);
+      const stored = safeReadTrackingState();
+      const contactId = params.get('contact_id') || params.get('contactId') || params.get('cid') || stored.contact_id || stored.cid || null;
+      const cid = params.get('cid') || params.get('contact_id') || stored.cid || stored.contact_id || null;
+      return { contact_id: contactId, cid };
+    }
+
+    function safeReadTrackingState() {
+      try {
+        return JSON.parse(window.localStorage.getItem(TRACKING_STORAGE_KEY) || '{}');
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function writeTrackingState(nextState) {
+      try {
+        window.localStorage.setItem(TRACKING_STORAGE_KEY, JSON.stringify(nextState));
+      } catch (error) {
+        // localStorage peut être bloqué en navigation privée : tracking analytics reste actif.
+      }
+    }
+
+    function pushDataLayer(eventName, payload = {}) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: eventName, ...payload });
+    }
+
+    function buildCrmPayload(eventName, payload = {}) {
+      const now = new Date().toISOString();
+      const identity = getTrackingParams();
+      const state = safeReadTrackingState();
+      const resource = payload.resource || {};
+      const nextCount = payload.incrementResourceCount
+        ? Number(state.sm_resources_consumed_count || 0) + 1
+        : Number(state.sm_resources_consumed_count || 0);
+
+      const tags = [];
+      const fields = {
+        sm_last_event: eventName,
+        sm_last_event_at: now
+      };
+
+      if (eventName === 'resource_hub_opened') {
+        tags.push('tag_sm_resource_hub_clicked');
+        fields.sm_resource_hub_clicked = now;
+      }
+
+      if (eventName === 'resource_clicked') {
+        tags.push('tag_sm_resource_consumer');
+        fields.sm_last_resource_viewed = resource.title || resource.id || '';
+        fields.sm_resources_consumed_count = nextCount;
+      }
+
+      if (eventName === 'notion_resource_opened') {
+        tags.push('tag_sm_notion_opened');
+        fields.sm_last_resource_viewed = resource.title || resource.id || '';
+        fields.sm_resources_consumed_count = nextCount;
+      }
+
+      if (eventName === 'challenge_cta_clicked') {
+        tags.push('tag_sm_challenge_clicked');
+        fields.sm_challenge_status = 'clicked';
+      }
+
+      if (eventName === 'challenge_page_visited') {
+        tags.push('tag_sm_challenge_visited');
+        fields.sm_challenge_status = 'visited';
+      }
+
+      if (eventName === 'challenge_registered') {
+        tags.push('tag_sm_challenge_registered');
+        fields.sm_challenge_status = 'registered';
+      }
+
+      if (state.has_seen_hub || identity.contact_id || identity.cid) {
+        tags.push('tag_sm_returning_contact');
+      }
+
+      return {
+        source: 'resource_hub',
+        event: eventName,
+        occurred_at: now,
+        url: window.location.href,
+        path: window.location.pathname,
+        referrer: document.referrer || null,
+        contact_id: identity.contact_id,
+        cid: identity.cid,
+        tags: Array.from(new Set(tags)),
+        fields,
+        resource: resource.id || resource.title ? {
+          id: resource.id || null,
+          title: resource.title || null,
+          ctaKeyword: resource.ctaKeyword || null,
+          linkToTool: resource.linkToTool || null,
+          tags: resource.tags || []
+        } : null,
+        meta: payload.meta || {}
+      };
+    }
+
+    function persistTrackingState(crmPayload) {
+      const current = safeReadTrackingState();
+      const next = {
+        ...current,
+        has_seen_hub: true,
+        contact_id: crmPayload.contact_id || current.contact_id || null,
+        cid: crmPayload.cid || current.cid || null,
+        sm_resources_consumed_count: crmPayload.fields.sm_resources_consumed_count ?? current.sm_resources_consumed_count ?? 0,
+        sm_last_resource_viewed: crmPayload.fields.sm_last_resource_viewed || current.sm_last_resource_viewed || null,
+        sm_challenge_status: crmPayload.fields.sm_challenge_status || current.sm_challenge_status || null,
+        last_event: crmPayload.event,
+        last_event_at: crmPayload.occurred_at
+      };
+      writeTrackingState(next);
+    }
+
+    function sendGhlWebhook(crmPayload) {
+      if (!GHL_TRACKING_WEBHOOK_URL) return;
+      const body = JSON.stringify(crmPayload);
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([body], { type: 'application/json' });
+          if (navigator.sendBeacon(GHL_TRACKING_WEBHOOK_URL, blob)) return;
+        }
+      } catch (error) {
+        // Fallback fetch ci-dessous.
+      }
+      try {
+        fetch(GHL_TRACKING_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          keepalive: true,
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body
+        });
+      } catch (error) {
+        console.warn('Tracking webhook non envoyé:', error);
+      }
+    }
+
+    function trackEvent(eventName, payload = {}) {
+      const crmPayload = buildCrmPayload(eventName, payload);
+      persistTrackingState(crmPayload);
+      pushDataLayer(eventName, crmPayload);
+      sendGhlWebhook(crmPayload);
+      return crmPayload;
+    }
+
+    function isNotionUrl(url) {
+      return /(^|\.)notion\.(so|site)$/i.test(new URL(url).hostname);
+    }
+
+    function openTrackedUrl(url, target = '_blank') {
+      if (!url) return;
+      window.open(url, target, 'noopener,noreferrer');
+    }
+
+    function trackResourceOpen(resource, meta = {}) {
+      trackEvent('resource_clicked', { resource, meta, incrementResourceCount: true });
+      try {
+        if (resource?.linkToTool && isNotionUrl(resource.linkToTool)) {
+          trackEvent('notion_resource_opened', { resource, meta, incrementResourceCount: false });
+        }
+      } catch (error) {
+        // URL invalide : on garde resource_clicked comme signal minimal.
+      }
+    }
+
+    function trackChallengeClick(meta = {}) {
+      trackEvent('challenge_cta_clicked', { meta });
+      // Le hub déclenche la visite via CTA sortant ; la page challenge peut aussi renvoyer
+      // ?challenge_registered=1 au hub pour poser le statut registered.
+      trackEvent('challenge_page_visited', { meta: { ...meta, inferred_from: 'hub_cta_click' } });
+    }
 
     // ============================================
     // DONNÉES FALLBACK - Utilisées si l'API ne répond pas
@@ -345,27 +548,159 @@
       }
     ];
 
-    // ============================================
-    // FONCTION: Fetch données depuis Google Sheet API
-    // ============================================
-    async function fetchResourcesFromSheet() {
-      if (API_URL === "REMPLACER_PAR_TON_URL_APPS_SCRIPT") {
-        console.log("API URL non configurée - utilisation des données fallback");
-        return null;
+    function parseTags(tagsValue) {
+      if (!tagsValue) return [];
+
+      const seen = new Set();
+      return tagsValue
+        .split(/\s*;\s*/)
+        .map(tag => tag.trim())
+        .filter(Boolean)
+        .filter(tag => {
+          const key = tag.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
+    function extractResourceId(urlValue, fallbackIndex) {
+      const normalizedUrl = (urlValue || "").trim();
+      const hashMatch = normalizedUrl.match(/[#?&]id=(RES\d+)/i);
+      if (hashMatch) return hashMatch[1].toUpperCase();
+
+      const plainMatch = normalizedUrl.match(/\b(RES\d{3,})\b/i);
+      if (plainMatch) return plainMatch[1].toUpperCase();
+
+      return `RES${String(fallbackIndex + 1).padStart(3, "0")}`;
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+
+        if (inQuotes) {
+          if (char === '"') {
+            if (text[i + 1] === '"') {
+              cell += '"';
+              i += 1;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            cell += char;
+          }
+          continue;
+        }
+
+        if (char === '"') {
+          inQuotes = true;
+        } else if (char === ",") {
+          row.push(cell);
+          cell = "";
+        } else if (char === "\n") {
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else if (char !== "\r") {
+          cell += char;
+        }
       }
 
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
+      row.push(cell);
+      if (row.length > 1 || row[0] !== "") {
+        rows.push(row);
+      }
 
-        if (data.success && data.resources) {
-          console.log(`✅ ${data.count} ressources chargées depuis Google Sheet`);
-          return data.resources;
+      if (rows.length === 0) return [];
+
+      const headers = rows[0].map(header => header.trim().toLowerCase());
+
+      return rows
+        .slice(1)
+        .filter(values => values.some(value => value && value.trim() !== ""))
+        .map(values => {
+          const entry = {};
+          headers.forEach((header, index) => {
+            entry[header] = (values[index] || "").trim();
+          });
+          return entry;
+        });
+    }
+
+    function normalizeSheetRows(rows) {
+      return rows
+        .map((row, index) => {
+          const dateAjout = row.date_ajout ? new Date(row.date_ajout) : null;
+          const safeDate = dateAjout && !Number.isNaN(dateAjout.getTime()) ? dateAjout : null;
+          const coverGdriveId = row.cover_gdrive_id || "";
+          const derivedCoverUrl = coverGdriveId ? `https://lh3.googleusercontent.com/d/${coverGdriveId}=w1000` : "";
+
+          return {
+            id: (row.resource_id || extractResourceId(row.url_page, index)).trim(),
+            title: (row.title || "").trim(),
+            coverGdriveId,
+            coverUrl: (row.cover_url || derivedCoverUrl || "").trim(),
+            folderName: (row.folder_name || "").trim(),
+            shortDescription: (row.short_description || "").trim(),
+            ctaKeyword: (row.cta_keyword || "").trim(),
+            linkToTool: (row.link_to_tool || "").trim(),
+            tags: parseTags(row.tags || ""),
+            vimeoUrl: (row.vimeo_id || "").trim(),
+            dateAjout: safeDate,
+            urlPage: (row.url_page || "").trim(),
+            isFeatured: false
+          };
+        })
+        .filter(resource => resource.title)
+        .sort((a, b) => {
+          if (!a.dateAjout && !b.dateAjout) return 0;
+          if (!a.dateAjout) return 1;
+          if (!b.dateAjout) return -1;
+          return b.dateAjout - a.dateAjout;
+        });
+    }
+
+    // ============================================
+    // FONCTION: Fetch données depuis Google Sheet
+    // ============================================
+    async function fetchResourcesFromSheet() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+      try {
+        const response = await fetch(`${SHEET_CSV_URL}&ts=${Date.now()}`, {
+          signal: controller.signal,
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          console.warn(`Google Sheet indisponible (${response.status})`);
+          return null;
         }
+
+        const csvText = await response.text();
+        const rows = parseCsv(csvText);
+        const resources = normalizeSheetRows(rows);
+
+        if (resources.length > 0) {
+          console.log(`✅ ${resources.length} ressources chargées depuis Google Sheet`);
+          return resources;
+        }
+
+        console.warn("Google Sheet vide ou illisible");
         return null;
       } catch (error) {
-        console.error("Erreur fetch API:", error);
+        console.warn("Google Sheet indisponible :", error);
         return null;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -408,20 +743,27 @@
           <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
             {/* Setup (petit) */}
             <p className="text-[18px] md:text-[20px] font-semibold text-[#f5f5f7] leading-[1.4]">
-              Tu génères déjà. Mais <span className="italic underline">tout repose sur toi</span>.
+              Ton chiffre monte. Mais <span className="italic underline">ton agenda ne t'appartient plus</span>.
             </p>
 
             {/* Punchline (gros) - 2 lignes */}
-            <h1 className="mt-3 md:mt-4 text-[36px] md:text-[60px] font-bold text-[#f5f5f7] leading-[1.1] md:leading-[1.06] tracking-[-0.4px] md:tracking-[-0.6px]">
-              Délègue 80% à l'IA.<br/>
-              <span className="gold-gradient">Garde ton Génie.</span>
+            <h1 className="mt-3 md:mt-4 text-[36px] md:text-[56px] font-bold text-[#f5f5f7] leading-[1.1] md:leading-[1.06] tracking-[-0.4px] md:tracking-[-0.6px]">
+              Reprends tes journées.<br/>
+              <span className="gold-gradient">Repars sur ce qui te fait kiffer.</span>
             </h1>
+
+            {/* Sous-titre : promesse concrete */}
+            <p className="mt-5 md:mt-6 max-w-[560px] text-[17px] md:text-[19px] text-[#c7c7cc] leading-[1.5]">
+              Les outils, les méthodes et les prompts que j'utilise pour sortir le
+              répétitif de mes journées. Gratuits, testés, prêts à l'emploi.
+            </p>
 
             {/* CTA - Bouton Apple */}
             <a
-              href="https://www.samurai-marketing.com/"
+              href={CHALLENGE_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackChallengeClick({ placement: 'hero' })}
               className="mt-7 md:mt-8 px-7 py-4 md:px-8 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
             >
               Découvrir comment
@@ -433,15 +775,56 @@
 
     // ============================================
     // COMPOSANT: SearchBar (full width, 2 lignes de tags)
+    // Avec effet hide on scroll down, show on scroll up (mobile only)
     // ============================================
     function SearchBar({ searchTerm, setSearchTerm, selectedTag, setSelectedTag, tags }) {
+      const [isVisible, setIsVisible] = useState(true);
+      const [lastScrollY, setLastScrollY] = useState(0);
+
+      // Détecter la direction du scroll (mobile only)
+      useEffect(() => {
+        const handleScroll = () => {
+          // Seulement sur mobile (< 768px)
+          if (window.innerWidth >= 768) {
+            setIsVisible(true);
+            return;
+          }
+
+          const currentScrollY = window.scrollY;
+          const scrollDelta = currentScrollY - lastScrollY;
+
+          // Seuil minimum pour éviter les micro-mouvements
+          if (Math.abs(scrollDelta) < 10) return;
+
+          if (currentScrollY < 100) {
+            // Toujours visible en haut de page
+            setIsVisible(true);
+          } else if (scrollDelta > 0) {
+            // Scroll vers le bas → cacher
+            setIsVisible(false);
+          } else {
+            // Scroll vers le haut → montrer
+            setIsVisible(true);
+          }
+
+          setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, [lastScrollY]);
+
       // Split tags into 2 rows
       const midPoint = Math.ceil(tags.length / 2);
       const row1Tags = tags.slice(0, midPoint);
       const row2Tags = tags.slice(midPoint);
 
       return (
-        <div className="sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2">
+        <div
+          className={`sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2 transition-transform duration-300 ease-out ${
+            isVisible ? 'translate-y-0' : '-translate-y-full'
+          } md:translate-y-0`}
+        >
           <div className="max-w-[1000px] mx-auto px-4 md:px-6 space-y-2">
 
             {/* Search Input - Full Width */}
@@ -543,6 +926,11 @@
                     href={linkToTool}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackEvent('resource_clicked', {
+                      resource: { title, ctaKeyword, linkToTool },
+                      meta: { placement: 'video_modal_top_cta' },
+                      incrementResourceCount: true
+                    })}
                     className="flex items-center gap-2 bg-[#0071e3] hover:bg-[#0077ed] px-4 py-2 rounded-full transition-colors shadow-lg"
                   >
                     <span className="text-white text-sm font-medium">Clique pour le lien</span>
@@ -554,7 +942,7 @@
               </div>
 
               {/* Video Container - 9:16 */}
-              <div className="relative aspect-[9/19] bg-black">
+              <div className="relative aspect-[9/16] bg-black">
                 {vimeoUrl ? (
                   <iframe
                     src={`https://player.vimeo.com/video/${vimeoUrl}?autoplay=1&loop=1&muted=0&title=0&byline=0&portrait=0&dnt=1`}
@@ -572,9 +960,10 @@
               {/* Barre du bas - Style Apple blur avec CTA */}
               <div className="bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 border-t border-white/10">
                 <a
-                  href="https://www.samurai-marketing.com/"
+                  href={CHALLENGE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackChallengeClick({ placement: 'video_modal_bottom_cta', resource_title: title })}
                   className="flex items-center justify-center w-full bg-[#0071e3] hover:bg-[#0077ed] py-2.5 rounded-full transition-colors shadow-lg"
                 >
                   <span className="text-white text-base font-medium">Découvre comment</span>
@@ -589,22 +978,27 @@
 
     // ============================================
     // COMPOSANT: AppleCard
+    // Deux zones cliquables:
+    // - Cover (haut) → ouvre la vidéo
+    // - Texte (bas) → ouvre le Google Doc
     // ============================================
     function AppleCard({ resource, index }) {
       const [isModalOpen, setIsModalOpen] = useState(false);
 
       // Clic sur la cover → ouvre la vidéo
-      const handleCoverClick = () => {
+      const handleCoverClick = (e) => {
+        e.stopPropagation();
         if (resource.vimeoUrl) {
           setIsModalOpen(true);
         }
       };
 
-      // Clic sur le CTA → ouvre le lien
-      const handleCtaClick = (e) => {
+      // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+      const handleTextClick = (e) => {
         e.stopPropagation();
         if (resource.linkToTool) {
-          window.open(resource.linkToTool, "_blank");
+          trackResourceOpen(resource, { placement: 'resource_card_text' });
+          openTrackedUrl(resource.linkToTool, "_blank");
         }
       };
 
@@ -617,28 +1011,24 @@
           >
             {/* Cover Container - Clic ouvre la vidéo */}
             <div
-              onClick={handleCoverClick}
-              className={`w-full overflow-hidden relative aspect-[9/19] cursor-pointer ${coverClass}`}
+              onClick={(e) => handleCoverClick(e)}
+              className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent relative"
             >
-              {/* Skeleton loader */}
-              <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
-
-              {/* Cover depuis covers.js (Google Drive) - format 9:16 */}
+              {/* Cover depuis covers.js (Google Drive) ou API */}
               {(() => {
-                const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                 const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
-                const finalUrl = coverUrl || gdriveUrl;
+                const apiCoverUrl = resource.coverUrl;
+                const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                 if (finalUrl) {
                   return (
                     <img
                       src={finalUrl}
                       alt={resource.title}
-                      className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
+                      className="w-full h-full object-cover transition-opacity duration-300"
                       loading={index < 4 ? "eager" : "lazy"}
                       decoding="async"
-                      width="300"
-                      height="533"
                       onLoad={(e) => {
                         e.target.style.opacity = '1';
                         const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
@@ -658,15 +1048,24 @@
                 return null;
               })()}
 
-              {/* Fallback gradient avec lettre */}
-              <div
-                className="fallback-gradient absolute inset-0 flex items-center justify-center"
-                style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
-              >
-                <div className="text-white/20 text-8xl font-bold">
-                  {resource.title.charAt(0).toUpperCase()}
-                </div>
-              </div>
+              {/* Fallback gradient avec lettre - n'affiche que si AUCUNE source d'image n'existe */}
+              {(() => {
+                const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                const gdriveUrl = resource.coverGdriveId;
+                const apiCoverUrl = resource.coverUrl;
+                const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
+                return (
+                  <div
+                    className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                    style={{ display: hasCover ? 'none' : 'flex' }}
+                  >
+                    <div className="text-white/20 text-8xl font-bold">
+                      {resource.title.charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Play Button Overlay */}
               {resource.vimeoUrl && (
@@ -680,8 +1079,11 @@
               )}
             </div>
 
-            {/* Content */}
-            <div className="p-4 md:p-5 flex flex-col flex-grow">
+            {/* Content - Clic ouvre le Google Doc */}
+            <div
+              onClick={handleTextClick}
+              className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+            >
               <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                 {resource.title}
               </h3>
@@ -689,19 +1091,16 @@
                 {resource.shortDescription}
               </p>
 
-              {/* Footer - Clic ouvre le lien */}
-              <div
-                onClick={handleCtaClick}
-                className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
-              >
+              {/* Footer avec mot-clé et icône lien externe */}
+              <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                    {resource.ctaKeyword}
+                    {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                   </span>
                 </div>
                 <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </div>
             </div>
@@ -713,7 +1112,7 @@
             vimeoUrl={resource.vimeoUrl}
             linkToTool={resource.linkToTool}
             title={resource.title}
-            ctaKeyword={resource.ctaKeyword}
+            ctaKeyword={resource.ctaKeyword || resource.tags?.[0] || 'IA'}
           />
         </>
       );
@@ -764,60 +1163,57 @@
 
       return (
         <>
-          <section className="bg-white py-[30px] px-4 md:px-6 border-b border-black/5">
-            <div className="max-w-[800px] mx-auto">
+          <section className="bg-white py-4 px-4 md:px-6 border-b border-black/5 relative z-0">
+            <div className="max-w-[700px] mx-auto">
               <div className="bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-0">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-0">
 
-                  {/* Colonne gauche: Cover Image (1/3 - cliquable pour vidéo) - format 9:16 */}
+                  {/* Colonne gauche: Cover Image - aspect ratio 3:4 */}
                   <div
-                    className="relative aspect-[9/19] cursor-pointer group bg-black overflow-hidden"
+                    className="relative aspect-[3/4] cursor-pointer group overflow-hidden bg-transparent"
                     onClick={handleCoverClick}
                   >
-                    {/* Skeleton loader */}
-                    <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
-
-                    {/* Cover image - format 9:16 */}
+                    {/* Cover image depuis covers.js (Google Drive) ou API */}
                     {(() => {
-                      const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                       const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600` : null;
-                      const finalUrl = coverUrl || gdriveUrl;
+                      const apiCoverUrl = resource.coverUrl;
+                      const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                       if (finalUrl) {
                         return (
                           <img
                             src={finalUrl}
                             alt={resource.title}
-                            className="absolute inset-0 w-full h-full object-contain z-10"
-                            onLoad={(e) => {
-                              e.target.style.opacity = '1';
-                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
-                              if (skeleton) skeleton.style.display = 'none';
-                              const fallback = e.target.parentElement.querySelector('.fallback-letter');
-                              if (fallback) fallback.style.display = 'none';
-                            }}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
-                              if (skeleton) skeleton.style.display = 'none';
-                            }}
-                            style={{ opacity: 0 }}
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         );
                       }
                       return null;
                     })()}
 
-                    {/* Fallback gradient avec lettre */}
-                    <div className="fallback-letter absolute inset-0 flex items-center justify-center">
-                      <div className="text-white/20 text-8xl font-bold">
-                        {resource.title.charAt(0).toUpperCase()}
-                      </div>
-                    </div>
+                    {/* Fallback gradient avec lettre - n'affiche que si AUCUNE source d'image n'existe */}
+                    {(() => {
+                      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                      const gdriveUrl = resource.coverGdriveId;
+                      const apiCoverUrl = resource.coverUrl;
+                      const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
+                      return (
+                        <div
+                          className={`fallback-letter absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                          style={{display: hasCover ? 'none' : 'flex'}}
+                        >
+                          <div className="text-white/20 text-8xl font-bold">
+                            {resource.title.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Play Button Overlay */}
                     {resource.vimeoUrl && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                         <div className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
                           <svg className="h-6 w-6 text-[#1d1d1f] ml-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
@@ -828,9 +1224,9 @@
                   </div>
 
                   {/* Colonne droite: Titre, description, CTA (2/3) */}
-                  <div className="flex flex-col justify-center p-6 md:p-10">
-                    {/* Titre XL en noir */}
-                    <h2 className="text-[32px] md:text-[44px] font-bold text-[#1d1d1f] leading-[1.1] tracking-[-0.4px] mb-4">
+                  <div className="flex flex-col justify-start p-5 md:p-8">
+                    {/* Titre */}
+                    <h2 className="text-[26px] md:text-[34px] font-bold text-[#1d1d1f] leading-[1.15] tracking-[-0.3px] mb-3">
                       {resource.title}
                     </h2>
 
@@ -843,19 +1239,27 @@
                     <div className="flex items-center gap-3 mb-6">
                       <span className="text-[12px] text-[#86868B] font-medium">Mot-clé:</span>
                       <span className="px-3 py-1.5 rounded-full text-[12px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                        {resource.ctaKeyword}
+                        {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                       </span>
                     </div>
 
-                    {/* Bouton CTA bleu - pas full width */}
+                    {/* Bouton CTA bleu - lien direct vers la ressource */}
                     <a
                       href={resource.linkToTool}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center self-start px-10 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (resource.linkToTool) {
+                          trackResourceOpen(resource, { placement: 'featured_resource_cta' });
+                          openTrackedUrl(resource.linkToTool, '_blank');
+                        }
+                      }}
+                      className="relative z-10 inline-flex items-center justify-center self-start px-10 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
                     >
                       Accès immédiat à la ressource
-                      <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 ml-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
@@ -875,6 +1279,46 @@
             ctaKeyword={resource.ctaKeyword}
           />
         </>
+      );
+    }
+
+    // ============================================
+    // COMPOSANT: FinalCTA (passerelle vers le Challenge)
+    // ============================================
+    function FinalCTA() {
+      return (
+        <section className="px-6 md:px-8 py-16 md:py-24 bg-[#0b0d0d]">
+          <div className="max-w-[720px] mx-auto text-center">
+            <p className="text-[15px] md:text-[17px] font-semibold uppercase tracking-[1.2px] text-[#8a8a8e]">
+              La suite
+            </p>
+
+            <h2 className="mt-4 text-[32px] md:text-[48px] font-bold text-[#f5f5f7] leading-[1.1] tracking-[-0.4px]">
+              Les outils, c'est le début.<br/>
+              <span className="gold-gradient">Le système, c'est le Challenge.</span>
+            </h2>
+
+            <p className="mt-5 md:mt-6 text-[17px] md:text-[19px] text-[#c7c7cc] leading-[1.5]">
+              Une ressource te fait gagner une heure. Un système te rend tes semaines.
+              En 3 jours, tu construis l'IA qui porte ton répétitif pendant que tu
+              reprends les projets qui te font vibrer.
+            </p>
+
+            <a
+              href={CHALLENGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackChallengeClick({ placement: 'final_cta' })}
+              className="inline-block mt-8 md:mt-10 px-8 py-4 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
+            >
+              Rejoindre le Challenge
+            </a>
+
+            <p className="mt-4 text-[14px] text-[#6e6e73]">
+              Gratuit. 3 jours. Tu repars avec ton premier système en place.
+            </p>
+          </div>
+        </section>
       );
     }
 
@@ -939,17 +1383,20 @@
     function App() {
       const [searchTerm, setSearchTerm] = useState("");
       const [selectedTag, setSelectedTag] = useState(null);
-      const [resources, setResources] = useState(FALLBACK_RESOURCES);
+      const [resources, setResources] = useState([]);
       const [isLoading, setIsLoading] = useState(true);
+      const [loadError, setLoadError] = useState(false);
+      const [reloadKey, setReloadKey] = useState(0);
       const [selectedResourceId, setSelectedResourceId] = useState(getResourceIdFromHash());
 
-      // Fonction pour dédoublonner par titre
+      // On garde un seul item par identifiant stable pour éviter
+      // qu'un doublon technique casse les URL #id=RES...
       const deduplicateResources = (data) => {
         const seen = new Set();
         return data.filter(item => {
-          const key = item.title.toLowerCase().trim();
+          const key = (item.id || item.title || "").toLowerCase().trim();
           if (seen.has(key)) {
-            console.log(`⚠️ Doublon supprimé: ${item.title}`);
+            console.log(`⚠️ Doublon supprimé: ${item.id || item.title}`);
             return false;
           }
           seen.add(key);
@@ -959,15 +1406,45 @@
 
       // Fetch données depuis Google Sheet au chargement
       useEffect(() => {
+        let isCancelled = false;
+
         async function loadData() {
+          setIsLoading(true);
+          setLoadError(false);
+
           const sheetData = await fetchResourcesFromSheet();
-          if (sheetData && sheetData.length > 0) {
-            const uniqueData = deduplicateResources(sheetData);
-            setResources(uniqueData);
+
+          if (isCancelled) {
+            return;
           }
+
+          if (sheetData && sheetData.length > 0) {
+            setResources(deduplicateResources(sheetData));
+          } else {
+            setResources([]);
+            setLoadError(true);
+          }
+
           setIsLoading(false);
         }
+
         loadData();
+
+        return () => {
+          isCancelled = true;
+        };
+      }, [reloadKey]);
+
+      // Tracking ouverture hub + callbacks depuis le challenge
+      useEffect(() => {
+        trackEvent('resource_hub_opened', { meta: { resource_id_from_hash: selectedResourceId } });
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('sm_challenge_status') || params.get('challenge_status');
+        if (params.get('challenge_registered') === '1' || status === 'registered') {
+          trackEvent('challenge_registered', { meta: { callback: true } });
+        } else if (status === 'visited') {
+          trackEvent('challenge_page_visited', { meta: { callback: true } });
+        }
       }, []);
 
       // Écouter les changements de hash (navigation fluide)
@@ -993,19 +1470,25 @@
         setSelectedResourceId(null);
       };
 
-      // Modifier AppleCard pour avoir un onClick qui navigue
+      // Modifier AppleCard pour avoir deux zones cliquables distinctes
       function AppleCardWithNavigation({ resource, index }) {
         const [isModalOpen, setIsModalOpen] = useState(false);
 
-        const handleCoverClick = () => {
+        // Clic sur la cover → ouvre la vidéo
+        const handleCoverClick = (e) => {
+          e.stopPropagation();
           if (resource.vimeoUrl) {
             setIsModalOpen(true);
           }
         };
 
-        const handleCtaClick = (e) => {
+        // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+        const handleTextClick = (e) => {
           e.stopPropagation();
-          navigateToResource(resource.id);
+          if (resource.linkToTool) {
+            trackResourceOpen(resource, { placement: 'resource_card_text' });
+            openTrackedUrl(resource.linkToTool, '_blank');
+          }
         };
 
         const coverClass = getCoverClass(resource.tags);
@@ -1013,36 +1496,28 @@
         return (
           <>
             <div
-              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
-              onClick={() => navigateToResource(resource.id)}
+              className="bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
             >
-              {/* Cover Container */}
+              {/* Cover Container - Clic ouvre la vidéo */}
               <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCoverClick();
-                }}
-                className={`w-full overflow-hidden relative aspect-[9/19] cursor-pointer ${coverClass}`}
+                onClick={handleCoverClick}
+                className="w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent relative"
               >
-                {/* Skeleton loader */}
-                <div className="skeleton-loader absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
-
-                {/* Cover image - format 9:16 */}
+                {/* Cover image depuis covers.js (Google Drive) ou API */}
                 {(() => {
-                  const coverUrl = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+                  const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
                   const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
-                  const finalUrl = coverUrl || gdriveUrl;
+                  const apiCoverUrl = resource.coverUrl;
+                  const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
                   if (finalUrl) {
                     return (
                       <img
                         src={finalUrl}
                         alt={resource.title}
-                        className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
+                        className="w-full h-full object-cover transition-opacity duration-300"
                         loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
-                        width="300"
-                        height="533"
                         onLoad={(e) => {
                           e.target.style.opacity = '1';
                           const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
@@ -1062,15 +1537,24 @@
                   return null;
                 })()}
 
-                {/* Fallback gradient */}
-                <div
-                  className="fallback-gradient absolute inset-0 flex items-center justify-center"
-                  style={{ display: (typeof getCoverUrl === 'function' && getCoverUrl(resource.title)) || resource.coverGdriveId ? 'none' : 'flex' }}
-                >
-                  <div className="text-white/20 text-8xl font-bold">
-                    {resource.title.charAt(0).toUpperCase()}
-                  </div>
-                </div>
+                {/* Fallback gradient - n'affiche que si AUCUNE source d'image n'existe */}
+                {(() => {
+                  const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+                  const gdriveUrl = resource.coverGdriveId;
+                  const apiCoverUrl = resource.coverUrl;
+                  const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+
+                  return (
+                    <div
+                      className={`fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`}
+                      style={{ display: hasCover ? 'none' : 'flex' }}
+                    >
+                      <div className="text-white/20 text-8xl font-bold">
+                        {resource.title.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Play Button Overlay */}
                 {resource.vimeoUrl && (
@@ -1084,8 +1568,11 @@
                 )}
               </div>
 
-              {/* Content */}
-              <div className="p-4 md:p-5 flex flex-col flex-grow">
+              {/* Content - Clic ouvre le Google Doc */}
+              <div
+                onClick={handleTextClick}
+                className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+              >
                 <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                   {resource.title}
                 </h3>
@@ -1093,22 +1580,16 @@
                   {resource.shortDescription}
                 </p>
 
-                {/* Footer - Naviguer vers la ressource */}
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCtaClick(e);
-                  }}
-                  className="mt-auto flex items-center justify-between pt-2 border-t border-black/5 cursor-pointer hover:bg-[#F5F5F7] transition-colors rounded-b-lg -mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 py-3 md:px-5"
-                >
+                {/* Footer avec mot-clé et flèche */}
+                <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
-                      {resource.ctaKeyword}
+                      {resource.ctaKeyword || resource.tags?.[0] || 'IA'}
                     </span>
                   </div>
                   <svg className="h-4 w-4 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </div>
               </div>
@@ -1120,7 +1601,7 @@
               vimeoUrl={resource.vimeoUrl}
               linkToTool={resource.linkToTool}
               title={resource.title}
-              ctaKeyword={resource.ctaKeyword}
+              ctaKeyword={resource.ctaKeyword || resource.tags?.[0] || 'IA'}
             />
           </>
         );
@@ -1146,10 +1627,35 @@
       // Trouver la ressource sélectionnée (pour featured section)
       const featuredResource = resources.find(r => r.id === selectedResourceId);
 
-      // Filtrer les autres ressources (exclure la featured si présente)
-      const otherResources = featuredResource
-        ? filteredResources.filter(r => r.id !== featuredResource.id)
-        : filteredResources;
+      // Créer une liste des 4 premiers featured (ceux affichés sur la page d'accueil)
+      // Si aucune ressource n'a isFeatured=true, on prend les 4 premières (triées par date)
+      const featuredListMain = useMemo(() => {
+        const featuredOnes = resources.filter(r => r.isFeatured);
+        if (featuredOnes.length > 0) {
+          return featuredOnes.slice(0, 4);
+        }
+        // Fallback: prendre les 4 premières ressources (déjà triées par date)
+        return resources.slice(0, 4);
+      }, [resources]);
+
+      // Filtrer les ressources à afficher
+      const otherResources = useMemo(() => {
+        // Si recherche ou tag sélectionné, TOUJOURS utiliser les résultats filtrés
+        if (searchTerm || selectedTag) {
+          // Exclure la featured resource si elle existe
+          if (featuredResource) {
+            return filteredResources.filter(r => r.id !== featuredResource.id);
+          }
+          return filteredResources;
+        }
+
+        // Sinon, afficher toutes les ressources (sauf featured si présente)
+        if (featuredResource) {
+          return resources.filter(r => r.id !== featuredResource.id);
+        }
+
+        return resources;
+      }, [featuredResource, searchTerm, selectedTag, filteredResources, resources]);
 
       return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
@@ -1173,6 +1679,22 @@
               <div className="py-12 text-center">
                 <p className="text-[#86868B] text-lg">Chargement des ressources...</p>
               </div>
+            ) : loadError ? (
+              <div className="px-6 py-12 text-center max-w-[720px] mx-auto">
+                <p className="text-[#1D1D1F] text-xl font-semibold">
+                  Les ressources mettent trop de temps à arriver.
+                </p>
+                <p className="text-[#6e6e73] text-base mt-3 leading-relaxed">
+                  La page n'affiche plus l'ancienne base de secours pour éviter d'ouvrir les mauvais lead magnets.
+                  Recharge dans quelques secondes.
+                </p>
+                <button
+                  onClick={() => setReloadKey(value => value + 1)}
+                  className="mt-6 inline-flex items-center justify-center rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold px-6 py-3 transition-colors shadow-lg"
+                >
+                  Réessayer
+                </button>
+              </div>
             ) : (
               <section className="w-full py-3 bg-[#F5F5F7]">
                 <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
@@ -1187,7 +1709,7 @@
                       <p className="text-[#86868B] text-lg">Aucune ressource trouvée</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                       {otherResources.map((resource, index) => (
                         <AppleCardWithNavigation key={resource.id} resource={resource} index={index} />
                       ))}
@@ -1197,6 +1719,8 @@
               </section>
             )}
           </main>
+
+          <FinalCTA />
 
           <Footer />
         </div>
