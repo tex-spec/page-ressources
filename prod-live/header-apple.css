@@ -1,0 +1,586 @@
+/* Header local — système commun inspiré de la barre de navigation Apple.
+   Le média reste libre derrière la barre ; la matière ne s'installe qu'au scroll. */
+
+@media (min-width: 801px) {
+  .site-bar {
+    padding: 10px 0 0 !important;
+  }
+
+  .site-bar__pill,
+  .site-bar.solid .site-bar__pill {
+    width: min(68vw, 1360px) !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    padding: 0 10px 0 24px !important;
+    gap: 1.4rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 18px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transition: background-color 260ms ease, border-color 260ms ease,
+      box-shadow 260ms ease, backdrop-filter 260ms ease !important;
+  }
+
+  .site-bar.solid .site-bar__pill {
+    background: rgba(17, 17, 19, .28) !important;
+    border-color: rgba(255, 255, 255, .13) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07),
+      0 12px 32px rgba(0, 0, 0, .34) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(175%) contrast(1.05) !important;
+    backdrop-filter: blur(30px) saturate(175%) contrast(1.05) !important;
+  }
+
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    background: rgba(17, 17, 19, .36) !important;
+    border-color: rgba(255, 255, 255, .13) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(175%) contrast(1.05) !important;
+    backdrop-filter: blur(30px) saturate(175%) contrast(1.05) !important;
+  }
+
+  .site-bar__pill::before {
+    display: none !important;
+  }
+
+  .site-bar__mark {
+    display: inline-flex !important;
+    align-items: center !important;
+    color: #f5f5f7 !important;
+    text-decoration: none !important;
+  }
+
+  .site-bar__mark img {
+    display: none !important;
+  }
+
+  .site-bar__mobile-title {
+    display: inline !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif !important;
+    font-size: 19px !important;
+    line-height: 23px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.022em !important;
+    white-space: nowrap !important;
+  }
+
+  .bar-nav {
+    height: 100% !important;
+    gap: .2rem !important;
+  }
+
+  .bar-link {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    padding: 0 .7rem !important;
+    color: rgba(245, 245, 247, .68) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .bar-link::after {
+    content: "" !important;
+    position: absolute !important;
+    right: .7rem !important;
+    bottom: -1px !important;
+    left: .7rem !important;
+    height: 1px !important;
+    border-radius: 99px !important;
+    background: rgba(245, 245, 247, .78) !important;
+    opacity: 0 !important;
+    transform: scaleX(.45) !important;
+    transition: opacity 180ms ease, transform 220ms ease !important;
+  }
+
+  .bar-link:hover,
+  .bar-link:focus-visible,
+  .bar-link[aria-current="page"] {
+    color: #f5f5f7 !important;
+  }
+
+  .bar-link[aria-current="page"] {
+    font-weight: 600 !important;
+  }
+
+  .bar-link:hover::after,
+  .bar-link:focus-visible::after,
+  .bar-link[aria-current="page"]::after {
+    opacity: 1 !important;
+    transform: scaleX(1) !important;
+  }
+
+  /* Repère de page Apple : une barre courte sous l'onglet actif, à l'intérieur
+     du cadre, plutôt qu'un souligné collé au texte. */
+  .bar-link[aria-current="page"]::after {
+    right: 0 !important;
+    bottom: -1px !important;
+    left: 0 !important;
+    height: 1px !important;
+    border-radius: 0 !important;
+    background: rgba(245, 245, 247, .9) !important;
+  }
+
+  .site-bar .cta {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    background: #0071e3 !important;
+    box-shadow: 0 5px 14px rgba(0, 82, 176, .22) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+}
+
+/* Dernière couche mobile : elle doit passer après toutes les règles de verre
+   héritées de ScrollCraft, sinon leurs variantes glass-over-light reprennent
+   la main au scroll. */
+@media (max-width: 800px) {
+  .site-bar.solid .site-bar__pill,
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    background: rgba(22, 22, 23, .26) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(170%) contrast(1.04) !important;
+    backdrop-filter: blur(26px) saturate(170%) contrast(1.04) !important;
+  }
+
+  /* Fermé : la ligne clôt la barre. Ouvert : elle voyage avec le panneau. */
+  .site-bar__pill::after {
+    transition: opacity 180ms ease !important;
+  }
+
+  .site-bar:has(.bar-menu.is-open) .site-bar__pill::after,
+  body:has(.bar-menu.is-open) .site-bar__pill::after {
+    opacity: 0 !important;
+  }
+
+  .site-bar.solid.menu-open .site-bar__pill::after {
+    opacity: 0 !important;
+  }
+
+}
+
+/* Mobile : une vraie vitre sombre. Le reflet interne de la première version
+   donnait un voile gris, et son cadre faisait 1,5 px sur écran Retina. */
+@media (max-width: 800px) {
+  .site-bar.solid .site-bar__pill {
+    background: rgba(22, 22, 23, .32) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) contrast(1.06) !important;
+    backdrop-filter: blur(30px) saturate(180%) contrast(1.06) !important;
+  }
+
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    background: rgba(22, 22, 23, .36) !important;
+  }
+
+  .site-bar.solid .site-bar__pill::before,
+  .site-bar.solid.glass-over-light .site-bar__pill::before {
+    display: none !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+
+  .site-bar__pill::after,
+  .site-bar.solid .site-bar__pill::after,
+  .site-bar.solid.glass-over-light .site-bar__pill::after {
+    inset: auto 0 0 !important;
+    height: 1px !important;
+    padding: 0 !important;
+    opacity: var(--header-divider-opacity, .45) !important;
+    border-radius: 0 !important;
+    background: rgba(245, 245, 247, .28) !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .site-bar {
+    position: fixed !important;
+    inset: 0 0 auto !important;
+    min-height: calc(48px + env(safe-area-inset-top)) !important;
+    padding-top: env(safe-area-inset-top) !important;
+    background: #161617 !important;
+  }
+
+  .site-bar__pill,
+  .site-bar.solid .site-bar__pill,
+  body:has(.bar-menu.is-open) .site-bar__pill {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 16px 0 20px !important;
+    gap: .5rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #161617 !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .site-bar.solid .site-bar__pill {
+    background: rgba(22, 22, 23, .38) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(175%) contrast(1.05) !important;
+    backdrop-filter: blur(28px) saturate(175%) contrast(1.05) !important;
+  }
+
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    background: rgba(22, 22, 23, .44) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(175%) contrast(1.05) !important;
+    backdrop-filter: blur(28px) saturate(175%) contrast(1.05) !important;
+  }
+
+  .site-bar__pill::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: auto 0 0 !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.1) 16%, rgba(255,255,255,.3) 50%, rgba(255,255,255,.1) 84%, transparent) !important;
+  }
+
+  .site-bar__mark img {
+    display: none !important;
+  }
+
+  .site-bar__mobile-title {
+    display: inline !important;
+    color: #f5f5f7 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif !important;
+    font-size: 17px !important;
+    line-height: 22px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.022em !important;
+    white-space: nowrap !important;
+  }
+
+  .bar-nav { gap: 8px !important; }
+  .bar-link { display: none !important; }
+
+  .site-bar .cta {
+    order: 2 !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .bar-burger {
+    order: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: #f5f5f7 !important;
+    background: transparent !important;
+  }
+
+  .bar-burger span:first-child {
+    display: block !important;
+    width: 10px !important;
+    height: 10px !important;
+    border: 0 !important;
+    border-right: 2px solid currentColor !important;
+    border-bottom: 2px solid currentColor !important;
+    background: transparent !important;
+    transform: translateY(-3px) rotate(45deg) !important;
+    transition: transform 300ms cubic-bezier(.16, 1, .3, 1) !important;
+  }
+
+  .bar-burger span:nth-child(2),
+  .bar-burger span:nth-child(3) {
+    display: none !important;
+  }
+
+  .bar-burger[aria-expanded="true"] span:first-child {
+    transform: translateY(3px) rotate(-135deg) !important;
+  }
+
+  .bar-menu,
+  .bar-menu.is-open {
+    position: fixed !important;
+    inset: calc(48px + env(safe-area-inset-top)) 0 0 !important;
+    display: grid !important;
+    grid-auto-rows: 42px !important;
+    align-content: start !important;
+    min-height: calc(100svh - 48px - env(safe-area-inset-top)) !important;
+    padding: 24px 20px 34px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: linear-gradient(to bottom, #161617 0 244px, rgba(22,22,23,.72) 244px, rgba(22,22,23,.48) 100%) !important;
+    box-shadow: none !important;
+    transform-origin: top center !important;
+    transition: opacity 360ms cubic-bezier(.4,0,1,1), transform 420ms cubic-bezier(.4,0,1,1), filter 400ms cubic-bezier(.4,0,1,1) !important;
+  }
+
+  .bar-menu[hidden] { display: none !important; }
+  .bar-menu { opacity: 0 !important; filter: blur(16px) !important; pointer-events: none !important; transform: translateY(-16px) scaleY(.987) !important; }
+  .bar-menu.is-open { opacity: 1 !important; filter: blur(0) !important; pointer-events: auto !important; transform: translateY(0) scaleY(1) !important; transition-timing-function: cubic-bezier(.23,1,.32,1) !important; }
+
+  .bar-menu a {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 42px !important;
+    padding: 0 16px 0 26px !important;
+    color: rgba(245,245,247,.78) !important;
+    font-size: 17px !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.02em !important;
+    text-decoration: none !important;
+    opacity: 0 !important;
+    transform: translateY(-6px) !important;
+    transition: opacity 260ms cubic-bezier(.23,1,.32,1), transform 320ms cubic-bezier(.23,1,.32,1) !important;
+  }
+
+  .bar-menu a::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 2px !important;
+    top: 50% !important;
+    width: 1px !important;
+    height: 18px !important;
+    background: transparent !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .bar-menu a[aria-current="page"] { color: #f5f5f7 !important; font-weight: 500 !important; }
+  .bar-menu a[aria-current="page"]::before { background: #d2d2d7 !important; }
+  .bar-menu.is-open a { opacity: 1 !important; transform: translateY(0) !important; }
+  .bar-menu.is-open a:nth-child(1) { transition-delay: 40ms !important; }
+  .bar-menu.is-open a:nth-child(2) { transition-delay: 70ms !important; }
+  .bar-menu.is-open a:nth-child(3) { transition-delay: 100ms !important; }
+  .bar-menu.is-open a:nth-child(4) { transition-delay: 130ms !important; }
+  .bar-menu.is-open a:nth-child(5) { transition-delay: 160ms !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-bar *, .site-bar *::before, .site-bar *::after { transition-duration: 1ms !important; transition-delay: 0ms !important; }
+}
+
+/* Aucun voile lumineux global ne doit accompagner la barre au scroll. */
+.site-bar.solid::before,
+.site-bar.solid.glass-over-light::before {
+  opacity: 0 !important;
+  background: transparent !important;
+  filter: none !important;
+}
+
+/* Finition Apple : le contour doit se percevoir par la lumière, pas comme un
+   cadre tracé. Le séparateur bas mobile reste volontairement indépendant. */
+@media (min-width: 801px) {
+  .site-bar.solid::before,
+  .site-bar.solid.glass-over-light::before {
+    opacity: 0 !important;
+    background: transparent !important;
+    filter: none !important;
+  }
+
+  .site-bar.solid .site-bar__pill::before,
+  .site-bar.solid.glass-over-light .site-bar__pill::before {
+    display: none !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+
+  .site-bar.solid .site-bar__pill,
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    border-width: .5px !important;
+    border-color: rgba(255, 255, 255, .075) !important;
+  }
+
+  .site-bar.solid .site-bar__pill::after,
+  .site-bar.solid.glass-over-light .site-bar__pill::after {
+    padding: .35px !important;
+    opacity: .4 !important;
+    box-shadow: inset 0 0 0 .25px rgba(255,255,255,.12), inset 0 1px 2px rgba(255,255,255,.06) !important;
+  }
+}
+
+/* Couche finale mobile : elle passe après toutes les variantes Glass et porte
+   le séparateur avec le panneau au lieu de le laisser sous la barre. */
+@media (max-width: 800px) {
+  .site-bar.solid .site-bar__pill,
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    background: rgba(22, 22, 23, .26) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(170%) contrast(1.04) !important;
+    backdrop-filter: blur(26px) saturate(170%) contrast(1.04) !important;
+  }
+
+  .site-bar.solid .site-bar__pill::before,
+  .site-bar.solid.glass-over-light .site-bar__pill::before {
+    display: none !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+
+  .site-bar__pill::after,
+  .site-bar.solid .site-bar__pill::after,
+  .site-bar.solid.glass-over-light .site-bar__pill::after {
+    inset: auto 0 0 !important;
+    height: 1px !important;
+    padding: 0 !important;
+    opacity: var(--header-divider-opacity, .45) !important;
+    border-radius: 0 !important;
+    background: rgba(245, 245, 247, .28) !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+    box-shadow: none !important;
+    transition: opacity 180ms ease !important;
+  }
+
+  .site-bar.menu-open .site-bar__pill::after,
+  body:has(.bar-menu.is-open) .site-bar__pill::after {
+    opacity: 0 !important;
+  }
+
+  /* Tiroir Apple canonique, mécanique recopiée du vrai code apple.com
+     (ac-localnav.built.css) : le tiroir est un PLI DE HAUTEUR, pas une
+     translation ni un scale. Le panneau plein écran est le rideau (fond +
+     flou), ::before est la surface pleine du tiroir dont la hauteur se plie,
+     ::after est le trait qui suit son bord bas. Apple : hauteur 320ms
+     cubic-bezier(.4,0,.6,1) ; à la fermeture les liens partent d'abord
+     (délai 0), le pli attend 240ms, le rideau se dissout avec lui. */
+  .bar-menu.bar-menu.bar-menu,
+  .bar-menu.bar-menu.bar-menu.is-open {
+    inset: calc(48px + env(safe-area-inset-top)) 0 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: calc(100svh - 48px - env(safe-area-inset-top)) !important;
+    display: grid !important;
+    grid-auto-rows: 42px !important;
+    align-content: start !important;
+    padding: 24px 20px 34px !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /* Surface pleine du tiroir : c'est elle qui se plie. */
+  .bar-menu.bar-menu.bar-menu::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    height: 0 !important;
+    background: #161617 !important;
+    pointer-events: none !important;
+    transition: height 340ms cubic-bezier(.4, 0, .6, 1) 220ms !important;
+  }
+
+  /* Trait de bord : il suit le pli du tiroir. */
+  .bar-menu.bar-menu.bar-menu::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    height: 1px !important;
+    background: rgba(245, 245, 247, .28) !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    transition: top 340ms cubic-bezier(.4, 0, .6, 1) 220ms, opacity 200ms linear 420ms !important;
+  }
+
+  /* Neutralise l'ancien trait posé sur le dernier lien par les styles inline. */
+  .bar-menu.bar-menu.bar-menu a:last-of-type::after { content: none !important; }
+
+  /* Fermé : rideau transparent, flou dissous pendant le pli (délai Apple). */
+  .bar-menu.bar-menu.bar-menu {
+    background: rgba(22, 22, 23, 0) !important;
+    -webkit-backdrop-filter: blur(0) saturate(100%) !important;
+    backdrop-filter: blur(0) saturate(100%) !important;
+    pointer-events: none !important;
+    transition: background 340ms cubic-bezier(.4, 0, .6, 1) 220ms, -webkit-backdrop-filter 340ms cubic-bezier(.4, 0, .6, 1) 220ms, backdrop-filter 340ms cubic-bezier(.4, 0, .6, 1) 220ms !important;
+  }
+
+  /* Liens, valeurs exactes Apple. Fermeture : départ immédiat, les liens du
+     bas s'éteignent plus vite (380ms → 300ms). */
+  .bar-menu.bar-menu.bar-menu:not(.is-open) a {
+    opacity: 0 !important;
+    transform: translate3d(0, -4px, 0) !important;
+    transition: opacity 380ms cubic-bezier(.4, 0, .6, 1), transform 380ms cubic-bezier(.4, 0, .6, 1) !important;
+    transition-delay: 0ms !important;
+  }
+
+  .bar-menu.bar-menu.bar-menu:not(.is-open) a:nth-child(2) { transition-duration: 360ms !important; }
+  .bar-menu.bar-menu.bar-menu:not(.is-open) a:nth-child(3) { transition-duration: 340ms !important; }
+  .bar-menu.bar-menu.bar-menu:not(.is-open) a:nth-child(4) { transition-duration: 320ms !important; }
+  .bar-menu.bar-menu.bar-menu:not(.is-open) a:nth-child(5) { transition-duration: 300ms !important; }
+
+  /* Ouverture : cascade tardive Apple, 280ms puis +20ms par lien, 320ms. */
+  .bar-menu.bar-menu.bar-menu.is-open a {
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
+    transition: opacity 320ms cubic-bezier(.4, 0, .6, 1), transform 320ms cubic-bezier(.4, 0, .6, 1) !important;
+  }
+
+  .bar-menu.bar-menu.bar-menu.is-open a:nth-child(1) { transition-delay: 280ms !important; }
+  .bar-menu.bar-menu.bar-menu.is-open a:nth-child(2) { transition-delay: 300ms !important; }
+  .bar-menu.bar-menu.bar-menu.is-open a:nth-child(3) { transition-delay: 320ms !important; }
+  .bar-menu.bar-menu.bar-menu.is-open a:nth-child(4) { transition-delay: 340ms !important; }
+  .bar-menu.bar-menu.bar-menu.is-open a:nth-child(5) { transition-delay: 360ms !important; }
+
+  /* Ouvert : le tiroir se déplie sans attendre, le rideau s'installe avec. */
+  .bar-menu.bar-menu.bar-menu.is-open {
+    background: rgba(22, 22, 23, .25) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
+    backdrop-filter: blur(30px) saturate(150%) !important;
+    pointer-events: auto !important;
+    transition: background 420ms cubic-bezier(.4, 0, .6, 1), -webkit-backdrop-filter 420ms cubic-bezier(.4, 0, .6, 1), backdrop-filter 420ms cubic-bezier(.4, 0, .6, 1) !important;
+  }
+
+  .bar-menu.bar-menu.bar-menu.is-open::before {
+    height: 241px !important;
+    transition: height 460ms cubic-bezier(.4, 0, .6, 1) !important;
+  }
+
+  .bar-menu.bar-menu.bar-menu.is-open::after {
+    top: 241px !important;
+    opacity: 1 !important;
+    transition: top 460ms cubic-bezier(.4, 0, .6, 1), opacity 160ms linear 80ms !important;
+  }
+
+  /* Les liens doivent passer devant la surface du tiroir. */
+  .bar-menu.bar-menu.bar-menu a { position: relative !important; z-index: 1 !important; }
+}
+
+/* Desktop : le trait pleine largeur vu sous la barre était la bordure basse de
+   la pilule en état solid ; on la retire. Le soulignement du lien actif était
+   rogné par l'overflow:hidden de la pilule (bottom:-1px = hors cadre) : on le
+   remonte à l'intérieur, au premier plan, spécificité au-dessus des blocs
+   inline chargés après ce fichier. */
+@media (min-width: 801px) {
+  .site-bar.solid .site-bar__pill,
+  .site-bar.solid.glass-over-light .site-bar__pill {
+    border-bottom-color: transparent !important;
+  }
+
+  /* Keyline Apple exacte (ac-localnav .ac-ln-menu-link.current::after) :
+     1px, largeur du texte, couleur du lien à opacité .8, radius 1px,
+     transition bottom .24s cubic-bezier(.28,.11,.32,1). */
+  .site-bar .site-bar__pill .bar-link.bar-link[aria-current="page"]::after {
+    left: .7rem !important;
+    right: .7rem !important;
+    bottom: 0 !important;
+    height: 1px !important;
+    border-radius: 1px !important;
+    background: #f5f5f7 !important;
+    opacity: .8 !important;
+    transform: scaleX(1) !important;
+    z-index: 5 !important;
+    transition: bottom .24s cubic-bezier(.28, .11, .32, 1) !important;
+  }
+}

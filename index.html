@@ -42,18 +42,17 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.21.0/babel.min.js"></script>
   <script src="covers.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     * {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
     }
 
     /* Gold Gradient Text - Match samurai-marketing.com */
     .gold-gradient {
-      background: linear-gradient(90deg, #7e5d1d, #e0bc79, #7e5d1d);
+      background: linear-gradient(100deg, #b8892f 0%, #e0c17a 34%, #e0c17a 62%, #b8892f 100%);
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -147,6 +146,88 @@
         transform: translateX(20px);
       }
     }
+
+    /* ---- Section CTA : forme copiee de texheyit.com/mon-histoire ---- */
+    .close-stage-hub {
+      position: relative; display: grid; align-content: center; justify-items: start;
+      padding: clamp(80px, 12vh, 140px) clamp(20px, 7vw, 110px);
+      overflow: hidden; background: #030303; min-height: clamp(520px, 78vh, 760px);
+    }
+    .close-vid-hub {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: 68% 50%; z-index: 0;
+    }
+    .close-veil-hub {
+      content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(90deg, rgba(3,3,3,0.82) 0%, rgba(3,3,3,0.62) 34%,
+                  rgba(3,3,3,0.16) 56%, rgba(3,3,3,0) 74%);
+    }
+    .close-inner-hub {
+      position: relative; z-index: 2; max-width: 34rem;
+      display: grid; justify-items: start; text-align: left;
+    }
+    .close-kicker-hub {
+      color: #c99b43; font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.1em; margin-bottom: 1.1rem;
+    }
+    .close-title-hub {
+      font-weight: 700; letter-spacing: -0.04em; text-wrap: balance; color: #f2efe8;
+      font-size: clamp(2.2rem, 1.5rem + 3.3vw, 3.95rem); line-height: 1.06;
+    }
+    .ct-gold-hub {
+      background: linear-gradient(100deg, #b8892f 0%, #e0c17a 34%, #e0c17a 62%, #b8892f 100%);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-fill-color: transparent;
+      -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    }
+    .close-body-hub {
+      margin-top: 1.5rem; max-width: 42ch; color: #8a8275;
+      font-size: 1.02rem; line-height: 1.55;
+    }
+    .close-body-hub strong { color: #f2efe8; font-weight: 700; }
+    .close-cta-hub {
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-top: 2rem; background: #fff; color: #101114;
+      text-decoration: none; font-weight: 500; font-size: 0.95rem;
+      min-height: 44px; padding: 0 21px; border-radius: 999px;
+      transition: background-color 160ms ease;
+    }
+    .close-cta-hub:hover { background: #f2efe8; }
+    /* Desktop : la video paysage ; mobile : la version 9:16 recadree */
+    .close-vid-hub--mobile { display: none; }
+
+    @media (max-width: 800px) {
+      .close-vid-hub--desktop { display: none; }
+      .close-vid-hub--mobile { display: block; object-position: 50% 50%; }
+
+      /* Le texte descend en bas de scene : le visage reste visible en haut */
+      .close-stage-hub {
+        align-content: end;
+        min-height: 100svh;
+        padding: 0 22px calc(env(safe-area-inset-bottom, 0px) + 44px);
+      }
+      .close-inner-hub { max-width: 100%; }
+      .close-title-hub { font-size: clamp(1.95rem, 8.2vw, 2.5rem); }
+      .close-body-hub { margin-top: 1rem; font-size: 0.97rem; }
+
+      /* Degrade : opaque en bas, transparent en haut pour reveler le visage */
+      .close-veil-hub {
+        background: linear-gradient(to top,
+                    rgba(3,3,3,1) 0%,
+                    rgba(3,3,3,0.96) 22%,
+                    rgba(3,3,3,0.80) 42%,
+                    rgba(3,3,3,0.46) 62%,
+                    rgba(3,3,3,0.18) 80%,
+                    rgba(3,3,3,0) 100%);
+      }
+
+      /* Bouton en pile, pleine largeur, police reduite pour tenir sur UNE ligne */
+      .close-cta-hub {
+        display: block; width: 100%; text-align: center;
+        margin-top: 1.6rem; font-size: 0.88rem;
+        padding: 0.92em 1rem; white-space: nowrap;
+      }
+    }
   </style>
 
   <script>
@@ -180,6 +261,15 @@
     // Source de vérité : export CSV public du tableur.
     // On lit directement la feuille pour éviter la latence du script Apps Script
     // et pour conserver les identifiants stables déjà utilisés dans les URL #id=RES...
+
+    // Le Google Sheet fournit des URL en =w1000 (PNG lourds, ~300 Ko piece).
+    // On normalise vers =w600-rj : meme image en JPEG, 3x plus legere, nette en Retina.
+    function normalizeCoverSize(url) {
+      if (!url) return "";
+      if (url.indexOf('googleusercontent.com') === -1) return url;
+      return url.replace(/=[whs]\d+(-[a-z]+)?$/i, '=w600-rj');
+    }
+
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1a1liM_3O4E3_3tqoxHwHfEcXf8Td78mI8xWbmj8j1Qg/export?format=csv&gid=0";
     const FETCH_TIMEOUT_MS = 20000;
 
@@ -640,13 +730,13 @@
           const dateAjout = row.date_ajout ? new Date(row.date_ajout) : null;
           const safeDate = dateAjout && !Number.isNaN(dateAjout.getTime()) ? dateAjout : null;
           const coverGdriveId = row.cover_gdrive_id || "";
-          const derivedCoverUrl = coverGdriveId ? `https://lh3.googleusercontent.com/d/${coverGdriveId}=w1000` : "";
+          const derivedCoverUrl = coverGdriveId ? `https://lh3.googleusercontent.com/d/${coverGdriveId}=w600-rj` : "";
 
           return {
             id: (row.resource_id || extractResourceId(row.url_page, index)).trim(),
             title: (row.title || "").trim(),
             coverGdriveId,
-            coverUrl: (row.cover_url || derivedCoverUrl || "").trim(),
+            coverUrl: normalizeCoverSize((row.cover_url || derivedCoverUrl || "").trim()),
             folderName: (row.folder_name || "").trim(),
             shortDescription: (row.short_description || "").trim(),
             ctaKeyword: (row.cta_keyword || "").trim(),
@@ -735,27 +825,29 @@
     function Hero() {
       return (
         <section
-          className="pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-fixed bg-center bg-cover"
+          className="pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-center bg-cover"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('BG-blur-checkout1.png')`
+            backgroundColor: '#030303',
+            backgroundImage: `linear-gradient(to top, rgba(3,3,3,0.90) 0%, rgba(3,3,3,0.84) 30%, rgba(3,3,3,0.76) 55%, rgba(3,3,3,0.68) 75%, rgba(3,3,3,0.72) 100%), url('close-bokeh.webp')`,
+            backgroundAttachment: 'scroll',
+            backgroundPosition: 'center right'
           }}
         >
-          <div className="max-w-[680px] mx-auto flex flex-col items-center text-center">
-            {/* Setup (petit) */}
-            <p className="text-[18px] md:text-[20px] font-semibold text-[#f5f5f7] leading-[1.4]">
-              Ton chiffre monte. Mais <span className="italic underline">ton agenda ne t'appartient plus</span>.
+          <div className="max-w-[860px] mx-auto flex flex-col items-center text-center pt-10 md:pt-20">
+            {/* Setup : scene canonique, la boite tourne mais elle tourne sur lui */}
+            <p className="text-[15px] md:text-[20px] font-semibold text-[#ddd7c9] leading-[1.4] whitespace-nowrap md:whitespace-normal">
+              Ta boîte tourne. Elle tourne sur ta mémoire.
             </p>
 
-            {/* Punchline (gros) - 2 lignes */}
-            <h1 className="mt-3 md:mt-4 text-[36px] md:text-[56px] font-bold text-[#f5f5f7] leading-[1.1] md:leading-[1.06] tracking-[-0.4px] md:tracking-[-0.6px]">
-              Reprends tes journées.<br/>
-              <span className="gold-gradient">Repars sur ce qui te fait kiffer.</span>
+            {/* Titre : verbe de construction + desir double (pro + vie) + subordonnee qui nie une peur installee */}
+            <h1 className="mt-3 md:mt-4 text-[29px] md:text-[56px] font-bold text-[#f5f5f7] leading-[1.12] md:leading-[1.06] tracking-[-0.3px] md:tracking-[-0.6px]">
+              Reprends ton temps et les tiens, <span className="gold-gradient">avant d'être juste plus rapide.</span>
             </h1>
 
-            {/* Sous-titre : promesse concrete */}
-            <p className="mt-5 md:mt-6 max-w-[560px] text-[17px] md:text-[19px] text-[#c7c7cc] leading-[1.5]">
-              Les outils, les méthodes et les prompts que j'utilise pour sortir le
-              répétitif de mes journées. Gratuits, testés, prêts à l'emploi.
+            {/* Sous-titre : bloc 1 descriptif, bloc 2 imperatif */}
+            <p className="mt-4 md:mt-6 max-w-[34rem] text-[15px] md:text-[18px] text-[#ddd7c9] leading-[1.5] md:leading-[1.55]">
+              Mes ressources IA pour dirigeants qui veulent l'esprit libre.
+              Prends les méthodes exactes, sans boîte noire.
             </p>
 
             {/* CTA - Bouton Apple */}
@@ -764,9 +856,9 @@
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackChallengeClick({ placement: 'hero' })}
-              className="mt-7 md:mt-8 px-7 py-4 md:px-8 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
+              className="mt-7 md:mt-9 inline-flex items-center justify-center h-[44px] px-[21px] bg-[#f2efe8] hover:bg-[#fff] text-[#101114] font-medium text-[15.2px] rounded-full transition-[background] duration-200 ease-out"
             >
-              Découvrir comment
+              Accéder aux ressources
             </a>
           </div>
         </section>
@@ -814,14 +906,9 @@
         return () => window.removeEventListener('scroll', handleScroll);
       }, [lastScrollY]);
 
-      // Split tags into 2 rows
-      const midPoint = Math.ceil(tags.length / 2);
-      const row1Tags = tags.slice(0, midPoint);
-      const row2Tags = tags.slice(midPoint);
-
       return (
         <div
-          className={`sticky top-0 z-40 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2 transition-transform duration-300 ease-out ${
+          className={`sticky top-[70px] md:top-[74px] z-30 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2 transition-transform duration-300 ease-out ${
             isVisible ? 'translate-y-0' : '-translate-y-full'
           } md:translate-y-0`}
         >
@@ -841,52 +928,6 @@
               />
             </div>
 
-            {/* Tags Carousel - 2 lignes scrollables */}
-            <div className="space-y-2">
-              {/* Row 1 */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
-                <button
-                  onClick={() => setSelectedTag(null)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                    !selectedTag
-                      ? 'bg-[#1d1d1f] text-white'
-                      : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
-                  }`}
-                >
-                  Tous
-                </button>
-                {row1Tags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                      selectedTag === tag
-                        ? 'bg-[#1d1d1f] text-white'
-                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              {/* Row 2 */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide justify-start md:justify-center">
-                {row2Tags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                      selectedTag === tag
-                        ? 'bg-[#1d1d1f] text-white'
-                        : 'bg-white text-[#1d1d1f] hover:bg-gray-100 border border-black/10'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       );
@@ -920,7 +961,7 @@
                   </svg>
                 </button>
 
-                {/* Bouton CTA bleu "Clique pour le lien" */}
+                {/* Bouton CTA bleu "Récupérer la ressource" */}
                 {linkToTool && (
                   <a
                     href={linkToTool}
@@ -931,10 +972,10 @@
                       meta: { placement: 'video_modal_top_cta' },
                       incrementResourceCount: true
                     })}
-                    className="flex items-center gap-2 bg-[#0071e3] hover:bg-[#0077ed] px-4 py-2 rounded-full transition-colors shadow-lg"
+                    className="flex items-center gap-2 bg-[#f2efe8] hover:bg-white px-5 h-[44px] rounded-full transition-colors shadow-lg"
                   >
-                    <span className="text-white text-sm font-medium">Clique pour le lien</span>
-                    <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-[#101114] text-[15.2px] font-medium">Récupérer la ressource</span>
+                    <svg className="h-4 w-4 text-[#101114]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>
@@ -964,9 +1005,9 @@
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackChallengeClick({ placement: 'video_modal_bottom_cta', resource_title: title })}
-                  className="flex items-center justify-center w-full bg-[#0071e3] hover:bg-[#0077ed] py-2.5 rounded-full transition-colors shadow-lg"
+                  className="flex items-center justify-center w-full h-[44px] rounded-full bg-white/10 hover:bg-white/[0.16] transition-colors"
                 >
-                  <span className="text-white text-base font-medium">Découvre comment</span>
+                  <span className="text-[#f2efe8]/85 text-[14px] font-medium">Aller plus loin : le Challenge</span>
                 </a>
               </div>
 
@@ -1017,7 +1058,7 @@
               {/* Cover depuis covers.js (Google Drive) ou API */}
               {(() => {
                 const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
-                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
+                const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600-rj` : null;
                 const apiCoverUrl = resource.coverUrl;
                 const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
@@ -1084,15 +1125,21 @@
               onClick={handleTextClick}
               className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
             >
-              <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+              <h3 className="text-[14px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                 {resource.title}
               </h3>
-              <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+              <p className="text-[12px] md:text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2 line-clamp-3">
                 {resource.shortDescription}
               </p>
 
               {/* Footer avec mot-clé et icône lien externe */}
-              <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
+              {/* Bouton bleu sous la description, puis mot-cle conserve dessous */}
+              <div className="mt-auto pt-3">
+                <span className="flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200">
+                  Accès immédiat
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-2.5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
@@ -1131,7 +1178,7 @@
       }
 
       return (
-        <section className="w-full py-3 bg-[#F5F5F7]">
+        <section className="w-full pt-8 pb-3 bg-[#F5F5F7]">
           <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
             <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">{title}</h2>
           </div>
@@ -1287,36 +1334,35 @@
     // ============================================
     function FinalCTA() {
       return (
-        <section className="px-6 md:px-8 py-16 md:py-24 bg-[#0b0d0d]">
-          <div className="max-w-[720px] mx-auto text-center">
-            <p className="text-[15px] md:text-[17px] font-semibold uppercase tracking-[1.2px] text-[#8a8a8e]">
-              La suite
+        <section className="close-stage-hub">
+          <video
+            className="close-vid-hub close-vid-hub--desktop"
+            src="assets/close-challenge.mp4"
+            muted loop playsInline autoPlay preload="none" aria-hidden="true"
+          />
+          <video
+            className="close-vid-hub close-vid-hub--mobile"
+            src="assets/close-challenge-v.mp4"
+            muted loop playsInline autoPlay preload="none" aria-hidden="true"
+          />
+          <div className="close-veil-hub" aria-hidden="true" />
+          <div className="close-inner-hub">
+            <p className="close-kicker-hub">Challenge CEO IA · 4 jours · 15 min par jour</p>
+            <h2 className="close-title-hub">Découvre <span className="ct-gold-hub">où partent vraiment tes heures</span>, et ce que tu en ferais.</h2>
+            <p className="close-body-hub">
+              <strong>L'IA a plus changé en six mois qu'en deux ans.</strong> Quatre jours pour
+              poser ton Système IA personnel, quinze minutes par jour. Le premier jour, tu vois
+              enfin où passent tes semaines.
             </p>
-
-            <h2 className="mt-4 text-[32px] md:text-[48px] font-bold text-[#f5f5f7] leading-[1.1] tracking-[-0.4px]">
-              Les outils, c'est le début.<br/>
-              <span className="gold-gradient">Le système, c'est le Challenge.</span>
-            </h2>
-
-            <p className="mt-5 md:mt-6 text-[17px] md:text-[19px] text-[#c7c7cc] leading-[1.5]">
-              Une ressource te fait gagner une heure. Un système te rend tes semaines.
-              En 3 jours, tu construis l'IA qui porte ton répétitif pendant que tu
-              reprends les projets qui te font vibrer.
-            </p>
-
             <a
+              className="close-cta-hub"
               href={CHALLENGE_URL}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackChallengeClick({ placement: 'final_cta' })}
-              className="inline-block mt-8 md:mt-10 px-8 py-4 bg-[#0071e3] hover:bg-[#0077ed] text-[#f5f5f7] font-medium text-[17px] rounded-[980px] transition-[background] duration-200 ease-out"
             >
-              Rejoindre le Challenge
+              Rejoindre le Challenge gratuit
             </a>
-
-            <p className="mt-4 text-[14px] text-[#6e6e73]">
-              Gratuit. 3 jours. Tu repars avec ton premier système en place.
-            </p>
           </div>
         </section>
       );
@@ -1506,7 +1552,7 @@
                 {/* Cover image depuis covers.js (Google Drive) ou API */}
                 {(() => {
                   const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
-                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w400` : null;
+                  const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600-rj` : null;
                   const apiCoverUrl = resource.coverUrl;
                   const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
 
@@ -1573,15 +1619,20 @@
                 onClick={handleTextClick}
                 className="p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
               >
-                <h3 className="text-[15px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
+                <h3 className="text-[14px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2">
                   {resource.title}
                 </h3>
-                <p className="text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2">
+                <p className="text-[12px] md:text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2 line-clamp-3">
                   {resource.shortDescription}
                 </p>
 
                 {/* Footer avec mot-clé et flèche */}
-                <div className="mt-auto flex items-center justify-between pt-2 border-t border-black/5">
+                <div className="mt-auto pt-3">
+                  <span className="flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200">
+                    Accès immédiat
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-[#86868B] font-medium">Mot-clé:</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10">
@@ -1661,13 +1712,7 @@
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
           <Header />
           <Hero />
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedTag={selectedTag}
-            setSelectedTag={setSelectedTag}
-            tags={allTags}
-          />
+          {/* Barre de recherche retiree (decision Tex) : la logique de filtre reste en place */}
 
           {/* Section Featured Resource (si URL avec #id=) */}
           {featuredResource && !searchTerm && !selectedTag && (
@@ -1696,7 +1741,7 @@
                 </button>
               </div>
             ) : (
-              <section className="w-full py-3 bg-[#F5F5F7]">
+              <section className="w-full pt-8 pb-3 bg-[#F5F5F7]">
                 <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
                   <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">
                     {searchTerm || selectedTag ? "Résultats de recherche" : "Ressources les plus récentes"}

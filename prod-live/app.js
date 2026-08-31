@@ -1,0 +1,1377 @@
+/* @jsxRuntime classic */
+const {
+  useState,
+  useMemo,
+  useEffect
+} = React;
+
+// ============================================
+// CONFIGURATION DATA - Google Sheet
+// ============================================
+// Source de vérité : export CSV public du tableur.
+// On lit directement la feuille pour éviter la latence du script Apps Script
+// et pour conserver les identifiants stables déjà utilisés dans les URL #id=RES...
+
+// Le Google Sheet fournit des URL en =w1000 (PNG lourds, ~300 Ko piece).
+// On normalise vers =w600-rj : meme image en JPEG, 3x plus legere, nette en Retina.
+function normalizeCoverSize(url) {
+  if (!url) return "";
+  if (url.indexOf('googleusercontent.com') === -1) return url;
+  return url.replace(/=[whs]\d+(-[a-z]+)?$/i, '=w600-rj');
+}
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1a1liM_3O4E3_3tqoxHwHfEcXf8Td78mI8xWbmj8j1Qg/export?format=csv&gid=0";
+const FETCH_TIMEOUT_MS = 20000;
+
+// ============================================
+// TRACKING FUNNEL DM / CONVERSATION AI
+// ============================================
+// Le webhook est volontairement configurable côté runtime/build afin de ne jamais exposer
+// un token GHL dans le front. En prod, définir window.RESOURCE_HUB_GHL_WEBHOOK_URL
+// avant ce script, ou injecter la valeur via Vercel/env au build.
+const GHL_TRACKING_WEBHOOK_URL = window.RESOURCE_HUB_GHL_WEBHOOK_URL || "";
+const CHALLENGE_URL = "https://www.samurai-marketing.com/";
+const TRACKING_STORAGE_KEY = "samurai_resource_hub_tracking";
+function getTrackingParams() {
+  const params = new URLSearchParams(window.location.search);
+  const stored = safeReadTrackingState();
+  const contactId = params.get('contact_id') || params.get('contactId') || params.get('cid') || stored.contact_id || stored.cid || null;
+  const cid = params.get('cid') || params.get('contact_id') || stored.cid || stored.contact_id || null;
+  return {
+    contact_id: contactId,
+    cid
+  };
+}
+function safeReadTrackingState() {
+  try {
+    return JSON.parse(window.localStorage.getItem(TRACKING_STORAGE_KEY) || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+function writeTrackingState(nextState) {
+  try {
+    window.localStorage.setItem(TRACKING_STORAGE_KEY, JSON.stringify(nextState));
+  } catch (error) {
+    // localStorage peut être bloqué en navigation privée : tracking analytics reste actif.
+  }
+}
+function pushDataLayer(eventName, payload = {}) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: eventName,
+    ...payload
+  });
+}
+function buildCrmPayload(eventName, payload = {}) {
+  const now = new Date().toISOString();
+  const identity = getTrackingParams();
+  const state = safeReadTrackingState();
+  const resource = payload.resource || {};
+  const nextCount = payload.incrementResourceCount ? Number(state.sm_resources_consumed_count || 0) + 1 : Number(state.sm_resources_consumed_count || 0);
+  const tags = [];
+  const fields = {
+    sm_last_event: eventName,
+    sm_last_event_at: now
+  };
+  if (eventName === 'resource_hub_opened') {
+    tags.push('tag_sm_resource_hub_clicked');
+    fields.sm_resource_hub_clicked = now;
+  }
+  if (eventName === 'resource_clicked') {
+    tags.push('tag_sm_resource_consumer');
+    fields.sm_last_resource_viewed = resource.title || resource.id || '';
+    fields.sm_resources_consumed_count = nextCount;
+  }
+  if (eventName === 'notion_resource_opened') {
+    tags.push('tag_sm_notion_opened');
+    fields.sm_last_resource_viewed = resource.title || resource.id || '';
+    fields.sm_resources_consumed_count = nextCount;
+  }
+  if (eventName === 'challenge_cta_clicked') {
+    tags.push('tag_sm_challenge_clicked');
+    fields.sm_challenge_status = 'clicked';
+  }
+  if (eventName === 'challenge_page_visited') {
+    tags.push('tag_sm_challenge_visited');
+    fields.sm_challenge_status = 'visited';
+  }
+  if (eventName === 'challenge_registered') {
+    tags.push('tag_sm_challenge_registered');
+    fields.sm_challenge_status = 'registered';
+  }
+  if (state.has_seen_hub || identity.contact_id || identity.cid) {
+    tags.push('tag_sm_returning_contact');
+  }
+  return {
+    source: 'resource_hub',
+    event: eventName,
+    occurred_at: now,
+    url: window.location.href,
+    path: window.location.pathname,
+    referrer: document.referrer || null,
+    contact_id: identity.contact_id,
+    cid: identity.cid,
+    tags: Array.from(new Set(tags)),
+    fields,
+    resource: resource.id || resource.title ? {
+      id: resource.id || null,
+      title: resource.title || null,
+      ctaKeyword: resource.ctaKeyword || null,
+      linkToTool: resource.linkToTool || null,
+      tags: resource.tags || []
+    } : null,
+    meta: payload.meta || {}
+  };
+}
+function persistTrackingState(crmPayload) {
+  const current = safeReadTrackingState();
+  const next = {
+    ...current,
+    has_seen_hub: true,
+    contact_id: crmPayload.contact_id || current.contact_id || null,
+    cid: crmPayload.cid || current.cid || null,
+    sm_resources_consumed_count: crmPayload.fields.sm_resources_consumed_count ?? current.sm_resources_consumed_count ?? 0,
+    sm_last_resource_viewed: crmPayload.fields.sm_last_resource_viewed || current.sm_last_resource_viewed || null,
+    sm_challenge_status: crmPayload.fields.sm_challenge_status || current.sm_challenge_status || null,
+    last_event: crmPayload.event,
+    last_event_at: crmPayload.occurred_at
+  };
+  writeTrackingState(next);
+}
+function sendGhlWebhook(crmPayload) {
+  if (!GHL_TRACKING_WEBHOOK_URL) return;
+  const body = JSON.stringify(crmPayload);
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], {
+        type: 'application/json'
+      });
+      if (navigator.sendBeacon(GHL_TRACKING_WEBHOOK_URL, blob)) return;
+    }
+  } catch (error) {
+    // Fallback fetch ci-dessous.
+  }
+  try {
+    fetch(GHL_TRACKING_WEBHOOK_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body
+    });
+  } catch (error) {
+    console.warn('Tracking webhook non envoyé:', error);
+  }
+}
+function trackEvent(eventName, payload = {}) {
+  const crmPayload = buildCrmPayload(eventName, payload);
+  persistTrackingState(crmPayload);
+  pushDataLayer(eventName, crmPayload);
+  sendGhlWebhook(crmPayload);
+  return crmPayload;
+}
+function isNotionUrl(url) {
+  return /(^|\.)notion\.(so|site)$/i.test(new URL(url).hostname);
+}
+function openTrackedUrl(url, target = '_blank') {
+  if (!url) return;
+  window.open(url, target, 'noopener,noreferrer');
+}
+function trackResourceOpen(resource, meta = {}) {
+  trackEvent('resource_clicked', {
+    resource,
+    meta,
+    incrementResourceCount: true
+  });
+  try {
+    if (resource?.linkToTool && isNotionUrl(resource.linkToTool)) {
+      trackEvent('notion_resource_opened', {
+        resource,
+        meta,
+        incrementResourceCount: false
+      });
+    }
+  } catch (error) {
+    // URL invalide : on garde resource_clicked comme signal minimal.
+  }
+}
+function trackChallengeClick(meta = {}) {
+  trackEvent('challenge_cta_clicked', {
+    meta
+  });
+  // Le hub déclenche la visite via CTA sortant ; la page challenge peut aussi renvoyer
+  // ?challenge_registered=1 au hub pour poser le statut registered.
+  trackEvent('challenge_page_visited', {
+    meta: {
+      ...meta,
+      inferred_from: 'hub_cta_click'
+    }
+  });
+}
+
+// ============================================
+// DONNÉES FALLBACK - Utilisées si l'API ne répond pas
+// ============================================
+const FALLBACK_RESOURCES = [{
+  id: "RES001",
+  title: "Améliorateur de prompts",
+  shortDescription: "Transforme tes prompts sans effort avec le nouvel optimiseur de prompts officiel d'OpenAI pour Chat GPT. C'est gratuit et facile !",
+  ctaKeyword: "OPTIMISER",
+  linkToTool: "https://platform.openai.com/chat/edit",
+  vimeoUrl: "1157511491",
+  tags: ["Productivité"],
+  isFeatured: true
+}, {
+  id: "RES002",
+  title: "Opus IA vidéos automatiques",
+  shortDescription: "Transforme une vidéo de 3 heures en 10 secondes d'apprentissage. Opus crée des résumés instantanés et des cheat sheets infographiques automatiquement.",
+  ctaKeyword: "TRANSFORMER",
+  linkToTool: "https://www.anthropic.com/claude",
+  vimeoUrl: "1157511088",
+  tags: ["Édition Vidéo"],
+  isFeatured: true
+}, {
+  id: "RES003",
+  title: "Alternative gratuite Bolt Lovable",
+  shortDescription: "Découvre la meilleure alternative gratuite à Bolt et Lovable pour coder tes apps IA sans montage vidéo complexe.",
+  ctaKeyword: "DÉCOUVRIR",
+  linkToTool: "https://replit.com",
+  vimeoUrl: "1157511317",
+  tags: ["Vibe Coding"],
+  isFeatured: true
+}, {
+  id: "RES004",
+  title: "Ton ordi bosse pendant que tu dors",
+  shortDescription: "Automatise tes tâches pendant que tu dors avec l'IA. Configure une synergie IA complète pour générer du contenu 24h/24.",
+  ctaKeyword: "AUTOMATISER",
+  linkToTool: "https://zapier.com",
+  vimeoUrl: "1157511407",
+  tags: ["Organisation"],
+  isFeatured: true
+}, {
+  id: "RES006",
+  title: "Animation IA qualité studio",
+  shortDescription: "Crée des animations professionnelles de qualité studio avec l'IA. Pas besoin de connaissances en motion design ou montage vidéo.",
+  ctaKeyword: "ANIMER",
+  linkToTool: "https://www.runway.ml",
+  vimeoUrl: "1157511752",
+  tags: ["Édition Vidéo"],
+  isFeatured: false
+}, {
+  id: "RES007",
+  title: "Sépare n'importe quel son",
+  shortDescription: "Isole vocals, musique, bruits de fond et batterie de n'importe quelle chanson ou vidéo gratuitement avec l'IA audio.",
+  ctaKeyword: "SÉPARER",
+  linkToTool: "https://www.splitter.ai",
+  vimeoUrl: "",
+  tags: ["Édition Vidéo"],
+  isFeatured: false
+}, {
+  id: "RES008",
+  title: "higgsfield's GPT 1.5 image",
+  shortDescription: "Génère des images surréalistes et cinématographiques avec GPT 1.5. La meilleure IA pour créer des visuels exceptionnels.",
+  ctaKeyword: "GÉNÉRER",
+  linkToTool: "https://higgsfield.ai",
+  vimeoUrl: "1157511837",
+  tags: ["Images"],
+  isFeatured: false
+}, {
+  id: "RES010",
+  title: "google Disco",
+  shortDescription: "Explore Google Disco pour créer des designs visuels générés par IA. L'outil secret de Google pour la créativité sans limites.",
+  ctaKeyword: "EXPLORER",
+  linkToTool: "https://disco.withgoogle.com",
+  vimeoUrl: "1157510922",
+  tags: ["Vibe Coding"],
+  isFeatured: false
+}, {
+  id: "RES011",
+  title: "Meilleurs modèles vidéo IA",
+  shortDescription: "Découvre le classement des meilleurs modèles IA pour créer des vidéos. Sora, Opus, Pika et bien d'autres comparés.",
+  ctaKeyword: "COMPARER",
+  linkToTool: "https://www.openai.com/sora",
+  vimeoUrl: "1157511653",
+  tags: ["Édition Vidéo"],
+  isFeatured: false
+}, {
+  id: "RES012",
+  title: "pyjama peint",
+  shortDescription: "Hack viral : utilise l'IA pour peindre des looks et créer des visuels de mode tendance pour tes réels TikTok.",
+  ctaKeyword: "CRÉER",
+  linkToTool: "https://www.midjourney.com",
+  vimeoUrl: "1157510784",
+  tags: ["Hack Vidéos Virales"],
+  isFeatured: false
+}, {
+  id: "RES014",
+  title: "llm council",
+  shortDescription: "Réunis plusieurs LLMs en conseil pour une intelligence décisionnelle supérieure. Fais voter Claude, GPT-4 et Gemini ensemble.",
+  ctaKeyword: "VOTER",
+  linkToTool: "https://huggingface.co",
+  vimeoUrl: "",
+  tags: ["Marketing"],
+  isFeatured: false
+}, {
+  id: "RES015",
+  title: "Notebook lm skills Canva / Powerpoint",
+  shortDescription: "Transforme NotebookLM en super-pouvoir Canva et PowerPoint. Génère des présentations automatiques à partir de tes notes.",
+  ctaKeyword: "TRANSFORMER",
+  linkToTool: "https://notebooklm.google.com",
+  vimeoUrl: "",
+  tags: ["Marketing"],
+  isFeatured: false
+}, {
+  id: "RES016",
+  title: "statistics",
+  shortDescription: "Analyse des statistiques complètes de ta présence IA. Mesure ton impact, tes conversions et ton ROI en temps réel.",
+  ctaKeyword: "ANALYSER",
+  linkToTool: "https://analytics.google.com",
+  vimeoUrl: "1157510673",
+  tags: ["Organisation"],
+  isFeatured: false
+}, {
+  id: "RES017",
+  title: "nanobanana prompts",
+  shortDescription: "Accède à 1000+ prompts Nano Banana Pro pour générer des images surréalistes. La plus grande banque de prompts IA.",
+  ctaKeyword: "ACCÉDER",
+  linkToTool: "https://nanobanana.ai",
+  vimeoUrl: "1157511234",
+  tags: ["Images"],
+  isFeatured: true
+}, {
+  id: "RES018",
+  title: "coherence perso videos",
+  shortDescription: "Génère des vidéos cohérentes et personnalisées avec cohérence IA. Ton clone vidéo qui parle exactement comme toi.",
+  ctaKeyword: "GÉNÉRER",
+  linkToTool: "https://www.synthesia.io",
+  vimeoUrl: "1157510719",
+  tags: ["Édition Vidéo"],
+  isFeatured: false
+}, {
+  id: "RES019",
+  title: "upscaller",
+  shortDescription: "Agrandis tes images sans perte de qualité avec l'upscaleur IA le plus puissant. Jusqu'à 8K en un clic.",
+  ctaKeyword: "AGRANDIR",
+  linkToTool: "https://upscayl.github.io",
+  vimeoUrl: "1157510997",
+  tags: ["Images"],
+  isFeatured: false
+}, {
+  id: "RES020",
+  title: "post AI Surfer épinglé",
+  shortDescription: "Duplicate le post viral d'AI Surfer qui a fonctionne. Le template secret pour créer des réels qui buzz.",
+  ctaKeyword: "DUPLIQUER",
+  linkToTool: "https://www.instagram.com/theaisurfer",
+  vimeoUrl: "1157510862",
+  tags: ["Hack Vidéos Virales", "Contenu"],
+  isFeatured: true,
+  coverGdriveId: "1vHCzw_8TNzfhYByceBxX09aY42WEJefx"
+}];
+function parseTags(tagsValue) {
+  if (!tagsValue) return [];
+  const seen = new Set();
+  return tagsValue.split(/\s*;\s*/).map(tag => tag.trim()).filter(Boolean).filter(tag => {
+    const key = tag.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function extractResourceId(urlValue, fallbackIndex) {
+  const normalizedUrl = (urlValue || "").trim();
+  const hashMatch = normalizedUrl.match(/[#?&]id=(RES\d+)/i);
+  if (hashMatch) return hashMatch[1].toUpperCase();
+  const plainMatch = normalizedUrl.match(/\b(RES\d{3,})\b/i);
+  if (plainMatch) return plainMatch[1].toUpperCase();
+  return `RES${String(fallbackIndex + 1).padStart(3, "0")}`;
+}
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          cell += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += char;
+      }
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(cell);
+      cell = "";
+    } else if (char === "\n") {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else if (char !== "\r") {
+      cell += char;
+    }
+  }
+  row.push(cell);
+  if (row.length > 1 || row[0] !== "") {
+    rows.push(row);
+  }
+  if (rows.length === 0) return [];
+  const headers = rows[0].map(header => header.trim().toLowerCase());
+  return rows.slice(1).filter(values => values.some(value => value && value.trim() !== "")).map(values => {
+    const entry = {};
+    headers.forEach((header, index) => {
+      entry[header] = (values[index] || "").trim();
+    });
+    return entry;
+  });
+}
+function normalizeSheetRows(rows) {
+  return rows.map((row, index) => {
+    const dateAjout = row.date_ajout ? new Date(row.date_ajout) : null;
+    const safeDate = dateAjout && !Number.isNaN(dateAjout.getTime()) ? dateAjout : null;
+    const coverGdriveId = row.cover_gdrive_id || "";
+    const derivedCoverUrl = coverGdriveId ? `https://lh3.googleusercontent.com/d/${coverGdriveId}=w600-rj` : "";
+    return {
+      id: (row.resource_id || extractResourceId(row.url_page, index)).trim(),
+      title: (row.title || "").trim(),
+      coverGdriveId,
+      coverUrl: normalizeCoverSize((row.cover_url || derivedCoverUrl || "").trim()),
+      folderName: (row.folder_name || "").trim(),
+      shortDescription: (row.short_description || "").trim(),
+      ctaKeyword: (row.cta_keyword || "").trim(),
+      linkToTool: (row.link_to_tool || "").trim(),
+      tags: parseTags(row.tags || ""),
+      vimeoUrl: (row.vimeo_id || "").trim(),
+      dateAjout: safeDate,
+      urlPage: (row.url_page || "").trim(),
+      isFeatured: false
+    };
+  }).filter(resource => resource.title).sort((a, b) => {
+    if (!a.dateAjout && !b.dateAjout) return 0;
+    if (!a.dateAjout) return 1;
+    if (!b.dateAjout) return -1;
+    return b.dateAjout - a.dateAjout;
+  });
+}
+
+// ============================================
+// FONCTION: Fetch données depuis Google Sheet
+// ============================================
+async function fetchResourcesFromSheet() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${SHEET_CSV_URL}&ts=${Date.now()}`, {
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      console.warn(`Google Sheet indisponible (${response.status})`);
+      return null;
+    }
+    const csvText = await response.text();
+    const rows = parseCsv(csvText);
+    const resources = normalizeSheetRows(rows);
+    if (resources.length > 0) {
+      console.log(`✅ ${resources.length} ressources chargées depuis Google Sheet`);
+      return resources;
+    }
+    console.warn("Google Sheet vide ou illisible");
+    return null;
+  } catch (error) {
+    console.warn("Google Sheet indisponible :", error);
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// ============================================
+// FONCTION: Get cover class based on tag
+// ============================================
+function getCoverClass(tags) {
+  if (!tags || tags.length === 0) return "cover-default";
+  const tag = tags[0].toLowerCase();
+  if (tag.includes("productivité")) return "cover-productivite";
+  if (tag.includes("édition") || tag.includes("video")) return "cover-edition-video";
+  if (tag.includes("vibe") || tag.includes("coding")) return "cover-vibe-coding";
+  if (tag.includes("organisation")) return "cover-organisation";
+  if (tag.includes("images")) return "cover-images";
+  if (tag.includes("marketing")) return "cover-marketing";
+  if (tag.includes("hack")) return "cover-hack-videos";
+  if (tag.includes("agents")) return "cover-agents-ia";
+  if (tag.includes("contenu")) return "cover-contenu";
+  return "cover-default";
+}
+
+// ============================================
+// COMPOSANT: Header (fusionné dans Hero)
+// ============================================
+function Header() {
+  return null;
+}
+
+// ============================================
+// COMPOSANT: Hero (Apple style - sans logo)
+// ============================================
+function Hero() {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-center bg-cover",
+    style: {
+      backgroundColor: '#030303',
+      backgroundImage: `linear-gradient(to top, rgba(3,3,3,0.90) 0%, rgba(3,3,3,0.84) 30%, rgba(3,3,3,0.76) 55%, rgba(3,3,3,0.68) 75%, rgba(3,3,3,0.72) 100%), url('close-bokeh.webp')`,
+      backgroundAttachment: 'scroll',
+      backgroundPosition: 'center right'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[860px] mx-auto flex flex-col items-center text-center pt-10 md:pt-20"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] md:text-[20px] font-semibold text-[#ddd7c9] leading-[1.4] whitespace-nowrap md:whitespace-normal"
+  }, "Ta bo\xEEte tourne. Elle tourne sur ta m\xE9moire."), /*#__PURE__*/React.createElement("h1", {
+    className: "mt-3 md:mt-4 text-[29px] md:text-[56px] font-bold text-[#f5f5f7] leading-[1.12] md:leading-[1.06] tracking-[-0.3px] md:tracking-[-0.6px]"
+  }, "Reprends ton temps et les tiens, ", /*#__PURE__*/React.createElement("span", {
+    className: "gold-gradient"
+  }, "avant d'\xEAtre juste plus rapide.")), /*#__PURE__*/React.createElement("p", {
+    className: "mt-4 md:mt-6 max-w-[34rem] text-[15px] md:text-[18px] text-[#ddd7c9] leading-[1.5] md:leading-[1.55]"
+  }, "Mes ressources IA pour dirigeants qui veulent l'esprit libre. Prends les m\xE9thodes exactes, sans bo\xEEte noire."), /*#__PURE__*/React.createElement("a", {
+    href: CHALLENGE_URL,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: () => trackChallengeClick({
+      placement: 'hero'
+    }),
+    className: "mt-7 md:mt-9 inline-flex items-center justify-center h-[44px] px-[21px] bg-[#f2efe8] hover:bg-[#fff] text-[#101114] font-medium text-[15.2px] rounded-full transition-[background] duration-200 ease-out"
+  }, "Acc\xE9der aux ressources")));
+}
+
+// ============================================
+// COMPOSANT: SearchBar (full width, 2 lignes de tags)
+// Avec effet hide on scroll down, show on scroll up (mobile only)
+// ============================================
+function SearchBar({
+  searchTerm,
+  setSearchTerm,
+  selectedTag,
+  setSelectedTag,
+  tags
+}) {
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Détecter la direction du scroll (mobile only)
+  useEffect(() => {
+    const handleScroll = () => {
+      // Seulement sur mobile (< 768px)
+      if (window.innerWidth >= 768) {
+        setIsVisible(true);
+        return;
+      }
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY;
+
+      // Seuil minimum pour éviter les micro-mouvements
+      if (Math.abs(scrollDelta) < 10) return;
+      if (currentScrollY < 100) {
+        // Toujours visible en haut de page
+        setIsVisible(true);
+      } else if (scrollDelta > 0) {
+        // Scroll vers le bas → cacher
+        setIsVisible(false);
+      } else {
+        // Scroll vers le haut → montrer
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll, {
+      passive: true
+    });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: `sticky top-[70px] md:top-[74px] z-30 bg-[#fbfbfd]/80 backdrop-blur-xl border-b border-black/10 py-2 transition-transform duration-300 ease-out ${isVisible ? 'translate-y-0' : '-translate-y-full'} md:translate-y-0`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[1000px] mx-auto px-4 md:px-6 space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full max-w-2xl mx-auto"
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#86868B]",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+  })), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Rechercher une ressource...",
+    value: searchTerm,
+    onChange: e => setSearchTerm(e.target.value),
+    className: "w-full pl-12 pr-4 py-3 rounded-full bg-white border border-black/10 focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 outline-none text-[15px] font-medium placeholder:text-[#86868B] transition-all shadow-sm"
+  }))));
+}
+
+// ============================================
+// COMPOSANT: VideoModal (modifié)
+// ============================================
+function VideoModal({
+  isOpen,
+  onClose,
+  vimeoUrl,
+  linkToTool,
+  title,
+  ctaKeyword
+}) {
+  if (!isOpen) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/80",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full max-w-[320px] mx-4",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative bg-[#1a1a1a] rounded-[24px] overflow-hidden shadow-2xl"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-white/10"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "h-5 w-5 text-white",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    d: "M6 18L18 6M6 6l12 12"
+  }))), linkToTool && /*#__PURE__*/React.createElement("a", {
+    href: linkToTool,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: () => trackEvent('resource_clicked', {
+      resource: {
+        title,
+        ctaKeyword,
+        linkToTool
+      },
+      meta: {
+        placement: 'video_modal_top_cta'
+      },
+      incrementResourceCount: true
+    }),
+    className: "flex items-center gap-2 bg-[#f2efe8] hover:bg-white px-5 h-[44px] rounded-full transition-colors shadow-lg"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[#101114] text-[15.2px] font-medium"
+  }, "R\xE9cup\xE9rer la ressource"), /*#__PURE__*/React.createElement("svg", {
+    className: "h-4 w-4 text-[#101114]",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "relative aspect-[9/16] bg-black"
+  }, vimeoUrl ? /*#__PURE__*/React.createElement("iframe", {
+    src: `https://player.vimeo.com/video/${vimeoUrl}?autoplay=1&loop=1&muted=0&title=0&byline=0&portrait=0&dnt=1`,
+    className: "absolute inset-0 w-full h-full",
+    allow: "autoplay; fullscreen; picture-in-picture",
+    allowFullScreen: true
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-white/60 text-sm"
+  }, "Vid\xE9o non disponible"))), /*#__PURE__*/React.createElement("div", {
+    className: "bg-[#1d1d1f]/80 backdrop-blur-xl px-4 py-3 border-t border-white/10"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: CHALLENGE_URL,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: () => trackChallengeClick({
+      placement: 'video_modal_bottom_cta',
+      resource_title: title
+    }),
+    className: "flex items-center justify-center w-full h-[44px] rounded-full bg-white/10 hover:bg-white/[0.16] transition-colors"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[#f2efe8]/85 text-[14px] font-medium"
+  }, "Aller plus loin : le Challenge"))))));
+}
+
+// ============================================
+// COMPOSANT: AppleCard
+// Deux zones cliquables:
+// - Cover (haut) → ouvre la vidéo
+// - Texte (bas) → ouvre le Google Doc
+// ============================================
+function AppleCard({
+  resource,
+  index
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Clic sur la cover → ouvre la vidéo
+  const handleCoverClick = e => {
+    e.stopPropagation();
+    if (resource.vimeoUrl) {
+      setIsModalOpen(true);
+    }
+  };
+
+  // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+  const handleTextClick = e => {
+    e.stopPropagation();
+    if (resource.linkToTool) {
+      trackResourceOpen(resource, {
+        placement: 'resource_card_text'
+      });
+      openTrackedUrl(resource.linkToTool, "_blank");
+    }
+  };
+  const coverClass = getCoverClass(resource.tags);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => handleCoverClick(e),
+    className: "w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent relative"
+  }, (() => {
+    const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+    const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600-rj` : null;
+    const apiCoverUrl = resource.coverUrl;
+    const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
+    if (finalUrl) {
+      return /*#__PURE__*/React.createElement("img", {
+        src: finalUrl,
+        alt: resource.title,
+        className: "w-full h-full object-cover transition-opacity duration-300",
+        loading: index < 4 ? "eager" : "lazy",
+        decoding: "async",
+        onLoad: e => {
+          e.target.style.opacity = '1';
+          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+          if (skeleton) skeleton.style.display = 'none';
+        },
+        onError: e => {
+          e.target.style.display = 'none';
+          const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+          if (skeleton) skeleton.style.display = 'none';
+          const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+          if (fallback) fallback.style.display = 'flex';
+        },
+        style: {
+          opacity: 0
+        }
+      });
+    }
+    return null;
+  })(), (() => {
+    const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+    const gdriveUrl = resource.coverGdriveId;
+    const apiCoverUrl = resource.coverUrl;
+    const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+    return /*#__PURE__*/React.createElement("div", {
+      className: `fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`,
+      style: {
+        display: hasCover ? 'none' : 'flex'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "text-white/20 text-8xl font-bold"
+    }, resource.title.charAt(0).toUpperCase()));
+  })(), resource.vimeoUrl && /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "h-6 w-6 text-[#1d1d1f] ml-1",
+    fill: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M8 5v14l11-7z"
+  }))))), /*#__PURE__*/React.createElement("div", {
+    onClick: handleTextClick,
+    className: "p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-[14px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2"
+  }, resource.title), /*#__PURE__*/React.createElement("p", {
+    className: "text-[12px] md:text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2 line-clamp-3"
+  }, resource.shortDescription), /*#__PURE__*/React.createElement("div", {
+    className: "mt-auto pt-3"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
+  }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between pt-2.5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-[#86868B] font-medium"
+  }, "Mot-cl\xE9:"), /*#__PURE__*/React.createElement("span", {
+    className: "px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10"
+  }, resource.ctaKeyword || resource.tags?.[0] || 'IA')), /*#__PURE__*/React.createElement("svg", {
+    className: "h-4 w-4 text-[#0071E3]",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+  }))))), /*#__PURE__*/React.createElement(VideoModal, {
+    isOpen: isModalOpen,
+    onClose: () => setIsModalOpen(false),
+    vimeoUrl: resource.vimeoUrl,
+    linkToTool: resource.linkToTool,
+    title: resource.title,
+    ctaKeyword: resource.ctaKeyword || resource.tags?.[0] || 'IA'
+  }));
+}
+
+// ============================================
+// COMPOSANT: ResourceGrid
+// ============================================
+function ResourceGrid({
+  title,
+  resources
+}) {
+  if (resources.length === 0) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "py-12 text-center"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-[#86868B] text-lg"
+    }, "Aucune ressource trouv\xE9e"));
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    className: "w-full pt-8 pb-3 bg-[#F5F5F7]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight"
+  }, title)), /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[1000px] mx-auto w-full px-4 md:px-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+  }, resources.map((resource, index) => /*#__PURE__*/React.createElement(AppleCard, {
+    key: resource.id,
+    resource: resource,
+    index: index
+  })))));
+}
+
+// ============================================
+// COMPOSANT: FeaturedResource (Section mise en avant)
+// S'insère entre les tags et la grille
+// ============================================
+function FeaturedResource({
+  resource
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const coverClass = getCoverClass(resource.tags);
+  const handleCoverClick = () => {
+    if (resource.vimeoUrl) {
+      setIsModalOpen(true);
+    }
+  };
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", {
+    className: "bg-white py-4 px-4 md:px-6 border-b border-black/5 relative z-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[700px] mx-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-[#fbfbfd] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-black/5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative aspect-[3/4] cursor-pointer group overflow-hidden bg-transparent",
+    onClick: handleCoverClick
+  }, (() => {
+    const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+    const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600` : null;
+    const apiCoverUrl = resource.coverUrl;
+    const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
+    if (finalUrl) {
+      return /*#__PURE__*/React.createElement("img", {
+        src: finalUrl,
+        alt: resource.title,
+        className: "absolute inset-0 w-full h-full object-cover"
+      });
+    }
+    return null;
+  })(), (() => {
+    const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+    const gdriveUrl = resource.coverGdriveId;
+    const apiCoverUrl = resource.coverUrl;
+    const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+    return /*#__PURE__*/React.createElement("div", {
+      className: `fallback-letter absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`,
+      style: {
+        display: hasCover ? 'none' : 'flex'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "text-white/20 text-8xl font-bold"
+    }, resource.title.charAt(0).toUpperCase()));
+  })(), resource.vimeoUrl && /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "h-6 w-6 text-[#1d1d1f] ml-1",
+    fill: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M8 5v14l11-7z"
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col justify-start p-5 md:p-8"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-[26px] md:text-[34px] font-bold text-[#1d1d1f] leading-[1.15] tracking-[-0.3px] mb-3"
+  }, resource.title), /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed mb-6"
+  }, resource.shortDescription), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 mb-6"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[12px] text-[#86868B] font-medium"
+  }, "Mot-cl\xE9:"), /*#__PURE__*/React.createElement("span", {
+    className: "px-3 py-1.5 rounded-full text-[12px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10"
+  }, resource.ctaKeyword || resource.tags?.[0] || 'IA')), /*#__PURE__*/React.createElement("a", {
+    href: resource.linkToTool,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (resource.linkToTool) {
+        trackResourceOpen(resource, {
+          placement: 'featured_resource_cta'
+        });
+        openTrackedUrl(resource.linkToTool, '_blank');
+      }
+    },
+    className: "relative z-10 inline-flex items-center justify-center self-start px-10 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-[15px] rounded-[980px] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+  }, "Acc\xE8s imm\xE9diat \xE0 la ressource", /*#__PURE__*/React.createElement("svg", {
+    className: "h-4 w-4 ml-2 pointer-events-none",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+  })))))))), /*#__PURE__*/React.createElement(VideoModal, {
+    isOpen: isModalOpen,
+    onClose: () => setIsModalOpen(false),
+    vimeoUrl: resource.vimeoUrl,
+    linkToTool: resource.linkToTool,
+    title: resource.title,
+    ctaKeyword: resource.ctaKeyword
+  }));
+}
+
+// ============================================
+// COMPOSANT: FinalCTA (passerelle vers le Challenge)
+// ============================================
+function FinalCTA() {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "close-stage-hub"
+  }, /*#__PURE__*/React.createElement("video", {
+    className: "close-vid-hub close-vid-hub--desktop",
+    src: "assets/close-challenge.mp4",
+    muted: true,
+    loop: true,
+    playsInline: true,
+    autoPlay: true,
+    preload: "none",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("video", {
+    className: "close-vid-hub close-vid-hub--mobile",
+    src: "assets/close-challenge-v.mp4",
+    muted: true,
+    loop: true,
+    playsInline: true,
+    autoPlay: true,
+    preload: "none",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "close-veil-hub",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "close-inner-hub"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "close-kicker-hub"
+  }, "Challenge CEO IA \xB7 4 jours \xB7 15 min par jour"), /*#__PURE__*/React.createElement("h2", {
+    className: "close-title-hub"
+  }, "D\xE9couvre ", /*#__PURE__*/React.createElement("span", {
+    className: "ct-gold-hub"
+  }, "o\xF9 partent vraiment tes heures"), ", et ce que tu en ferais."), /*#__PURE__*/React.createElement("p", {
+    className: "close-body-hub"
+  }, /*#__PURE__*/React.createElement("strong", null, "L'IA a plus chang\xE9 en six mois qu'en deux ans."), " Quatre jours pour poser ton Syst\xE8me IA personnel, quinze minutes par jour. Le premier jour, tu vois enfin o\xF9 passent tes semaines."), /*#__PURE__*/React.createElement("a", {
+    className: "close-cta-hub",
+    href: CHALLENGE_URL,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: () => trackChallengeClick({
+      placement: 'final_cta'
+    })
+  }, "Rejoindre le Challenge gratuit")));
+}
+
+// ============================================
+// COMPOSANT: Footer
+// ============================================
+function Footer() {
+  return /*#__PURE__*/React.createElement("footer", {
+    className: "bg-[#0b0d0d] py-12 px-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[1000px] mx-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap justify-center gap-6 mb-6"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    className: "text-[#8a8a8e] hover:text-white text-sm transition-colors"
+  }, "Mentions l\xE9gales"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[#3a3a3c]"
+  }, "|"), /*#__PURE__*/React.createElement("a", {
+    href: "https://samurai-marketing.odoo.com/conditions-generales-samurai-marketing",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    className: "text-[#8a8a8e] hover:text-white text-sm transition-colors"
+  }, "CGV"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[#3a3a3c]"
+  }, "|"), /*#__PURE__*/React.createElement("a", {
+    href: "mailto:tex@texheyit.com",
+    className: "text-[#8a8a8e] hover:text-white text-sm transition-colors"
+  }, "Contact")), /*#__PURE__*/React.createElement("p", {
+    className: "text-[#6e6e73] text-sm text-center"
+  }, "\xA9 2026 Samurai Marketing. Tous droits r\xE9serv\xE9s.")));
+}
+
+// ============================================
+// FONCTION: Extraire resourceId du hash
+// ============================================
+function getResourceIdFromHash() {
+  const hash = window.location.hash.substring(1);
+  if (hash.startsWith('id=')) {
+    return hash.substring(3);
+  }
+  return null;
+}
+
+// ============================================
+// APP PRINCIPALE
+// ============================================
+function App() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [resources, setResources] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [selectedResourceId, setSelectedResourceId] = useState(getResourceIdFromHash());
+
+  // On garde un seul item par identifiant stable pour éviter
+  // qu'un doublon technique casse les URL #id=RES...
+  const deduplicateResources = data => {
+    const seen = new Set();
+    return data.filter(item => {
+      const key = (item.id || item.title || "").toLowerCase().trim();
+      if (seen.has(key)) {
+        console.log(`⚠️ Doublon supprimé: ${item.id || item.title}`);
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+
+  // Fetch données depuis Google Sheet au chargement
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadData() {
+      setIsLoading(true);
+      setLoadError(false);
+      const sheetData = await fetchResourcesFromSheet();
+      if (isCancelled) {
+        return;
+      }
+      if (sheetData && sheetData.length > 0) {
+        setResources(deduplicateResources(sheetData));
+      } else {
+        setResources([]);
+        setLoadError(true);
+      }
+      setIsLoading(false);
+    }
+    loadData();
+    return () => {
+      isCancelled = true;
+    };
+  }, [reloadKey]);
+
+  // Tracking ouverture hub + callbacks depuis le challenge
+  useEffect(() => {
+    trackEvent('resource_hub_opened', {
+      meta: {
+        resource_id_from_hash: selectedResourceId
+      }
+    });
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('sm_challenge_status') || params.get('challenge_status');
+    if (params.get('challenge_registered') === '1' || status === 'registered') {
+      trackEvent('challenge_registered', {
+        meta: {
+          callback: true
+        }
+      });
+    } else if (status === 'visited') {
+      trackEvent('challenge_page_visited', {
+        meta: {
+          callback: true
+        }
+      });
+    }
+  }, []);
+
+  // Écouter les changements de hash (navigation fluide)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const resourceId = getResourceIdFromHash();
+      setSelectedResourceId(resourceId);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Fonction pour naviguer vers une ressource
+  const navigateToResource = resourceId => {
+    window.location.hash = `id=${resourceId}`;
+    setSelectedResourceId(resourceId);
+  };
+
+  // Fonction pour retourner à la liste
+  const handleBackToList = () => {
+    window.location.hash = '';
+    setSelectedResourceId(null);
+  };
+
+  // Modifier AppleCard pour avoir deux zones cliquables distinctes
+  function AppleCardWithNavigation({
+    resource,
+    index
+  }) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Clic sur la cover → ouvre la vidéo
+    const handleCoverClick = e => {
+      e.stopPropagation();
+      if (resource.vimeoUrl) {
+        setIsModalOpen(true);
+      }
+    };
+
+    // Clic sur la partie texte → ouvre le Google Doc (linkToTool)
+    const handleTextClick = e => {
+      e.stopPropagation();
+      if (resource.linkToTool) {
+        trackResourceOpen(resource, {
+          placement: 'resource_card_text'
+        });
+        openTrackedUrl(resource.linkToTool, '_blank');
+      }
+    };
+    const coverClass = getCoverClass(resource.tags);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "bg-white rounded-[20px] md:rounded-[24px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-black/5 group flex flex-col h-full hover:-translate-y-1"
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: handleCoverClick,
+      className: "w-full aspect-[3/4] overflow-hidden cursor-pointer rounded-t-[20px] md:rounded-t-[24px] bg-transparent relative"
+    }, (() => {
+      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' ? getCoverUrl(resource.title) : null;
+      const gdriveUrl = resource.coverGdriveId ? `https://lh3.googleusercontent.com/d/${resource.coverGdriveId}=w600-rj` : null;
+      const apiCoverUrl = resource.coverUrl;
+      const finalUrl = apiCoverUrl || coverUrlFromCoverJs || gdriveUrl;
+      if (finalUrl) {
+        return /*#__PURE__*/React.createElement("img", {
+          src: finalUrl,
+          alt: resource.title,
+          className: "w-full h-full object-cover transition-opacity duration-300",
+          loading: index < 4 ? "eager" : "lazy",
+          decoding: "async",
+          onLoad: e => {
+            e.target.style.opacity = '1';
+            const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+            if (skeleton) skeleton.style.display = 'none';
+          },
+          onError: e => {
+            e.target.style.display = 'none';
+            const skeleton = e.target.parentElement.querySelector('.skeleton-loader');
+            if (skeleton) skeleton.style.display = 'none';
+            const fallback = e.target.parentElement.querySelector('.fallback-gradient');
+            if (fallback) fallback.style.display = 'flex';
+          },
+          style: {
+            opacity: 0
+          }
+        });
+      }
+      return null;
+    })(), (() => {
+      const coverUrlFromCoverJs = typeof getCoverUrl === 'function' && getCoverUrl(resource.title);
+      const gdriveUrl = resource.coverGdriveId;
+      const apiCoverUrl = resource.coverUrl;
+      const hasCover = coverUrlFromCoverJs || gdriveUrl || apiCoverUrl;
+      return /*#__PURE__*/React.createElement("div", {
+        className: `fallback-gradient absolute inset-0 flex items-center justify-center ${getCoverClass(resource.tags)}`,
+        style: {
+          display: hasCover ? 'none' : 'flex'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "text-white/20 text-8xl font-bold"
+      }, resource.title.charAt(0).toUpperCase()));
+    })(), resource.vimeoUrl && /*#__PURE__*/React.createElement("div", {
+      className: "absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "h-14 w-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+    }, /*#__PURE__*/React.createElement("svg", {
+      className: "h-6 w-6 text-[#1d1d1f] ml-1",
+      fill: "currentColor",
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M8 5v14l11-7z"
+    }))))), /*#__PURE__*/React.createElement("div", {
+      onClick: handleTextClick,
+      className: "p-4 md:p-5 flex flex-col flex-grow cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+    }, /*#__PURE__*/React.createElement("h3", {
+      className: "text-[14px] md:text-[16px] font-bold text-[#1d1d1f] mb-1.5 tracking-tight leading-snug group-hover:text-[#0071E3] transition-colors line-clamp-2"
+    }, resource.title), /*#__PURE__*/React.createElement("p", {
+      className: "text-[12px] md:text-[13px] text-[#6e6e73] leading-relaxed font-medium mb-2 line-clamp-3"
+    }, resource.shortDescription), /*#__PURE__*/React.createElement("div", {
+      className: "mt-auto pt-3"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
+    }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between pt-2.5"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1.5"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] text-[#86868B] font-medium"
+    }, "Mot-cl\xE9:"), /*#__PURE__*/React.createElement("span", {
+      className: "px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10"
+    }, resource.ctaKeyword || resource.tags?.[0] || 'IA')), /*#__PURE__*/React.createElement("svg", {
+      className: "h-4 w-4 text-[#0071E3]",
+      fill: "none",
+      stroke: "currentColor",
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      strokeWidth: 2,
+      d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+    }))))), /*#__PURE__*/React.createElement(VideoModal, {
+      isOpen: isModalOpen,
+      onClose: () => setIsModalOpen(false),
+      vimeoUrl: resource.vimeoUrl,
+      linkToTool: resource.linkToTool,
+      title: resource.title,
+      ctaKeyword: resource.ctaKeyword || resource.tags?.[0] || 'IA'
+    }));
+  }
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    resources.forEach(r => r.tags && r.tags.forEach(t => tags.add(t)));
+    return Array.from(tags).sort();
+  }, [resources]);
+  const filteredResources = useMemo(() => {
+    return resources.filter(resource => {
+      const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) || (resource.shortDescription || '').toLowerCase().includes(searchTerm.toLowerCase()) || (resource.ctaKeyword || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTag = selectedTag ? (resource.tags || []).includes(selectedTag) : true;
+      return matchesSearch && matchesTag;
+    });
+  }, [searchTerm, selectedTag, resources]);
+
+  // Trouver la ressource sélectionnée (pour featured section)
+  const featuredResource = resources.find(r => r.id === selectedResourceId);
+
+  // Créer une liste des 4 premiers featured (ceux affichés sur la page d'accueil)
+  // Si aucune ressource n'a isFeatured=true, on prend les 4 premières (triées par date)
+  const featuredListMain = useMemo(() => {
+    const featuredOnes = resources.filter(r => r.isFeatured);
+    if (featuredOnes.length > 0) {
+      return featuredOnes.slice(0, 4);
+    }
+    // Fallback: prendre les 4 premières ressources (déjà triées par date)
+    return resources.slice(0, 4);
+  }, [resources]);
+
+  // Filtrer les ressources à afficher
+  const otherResources = useMemo(() => {
+    // Si recherche ou tag sélectionné, TOUJOURS utiliser les résultats filtrés
+    if (searchTerm || selectedTag) {
+      // Exclure la featured resource si elle existe
+      if (featuredResource) {
+        return filteredResources.filter(r => r.id !== featuredResource.id);
+      }
+      return filteredResources;
+    }
+
+    // Sinon, afficher toutes les ressources (sauf featured si présente)
+    if (featuredResource) {
+      return resources.filter(r => r.id !== featuredResource.id);
+    }
+    return resources;
+  }, [featuredResource, searchTerm, selectedTag, filteredResources, resources]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen bg-[#F5F5F7] flex flex-col"
+  }, /*#__PURE__*/React.createElement(Header, null), /*#__PURE__*/React.createElement(Hero, null), featuredResource && !searchTerm && !selectedTag && /*#__PURE__*/React.createElement(FeaturedResource, {
+    resource: featuredResource
+  }), /*#__PURE__*/React.createElement("main", {
+    className: "flex-grow pb-8"
+  }, isLoading ? /*#__PURE__*/React.createElement("div", {
+    className: "py-12 text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[#86868B] text-lg"
+  }, "Chargement des ressources...")) : loadError ? /*#__PURE__*/React.createElement("div", {
+    className: "px-6 py-12 text-center max-w-[720px] mx-auto"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[#1D1D1F] text-xl font-semibold"
+  }, "Les ressources mettent trop de temps \xE0 arriver."), /*#__PURE__*/React.createElement("p", {
+    className: "text-[#6e6e73] text-base mt-3 leading-relaxed"
+  }, "La page n'affiche plus l'ancienne base de secours pour \xE9viter d'ouvrir les mauvais lead magnets. Recharge dans quelques secondes."), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setReloadKey(value => value + 1),
+    className: "mt-6 inline-flex items-center justify-center rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold px-6 py-3 transition-colors shadow-lg"
+  }, "R\xE9essayer")) : /*#__PURE__*/React.createElement("section", {
+    className: "w-full pt-8 pb-3 bg-[#F5F5F7]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight"
+  }, searchTerm || selectedTag ? "Résultats de recherche" : "Ressources les plus récentes")), /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[1000px] mx-auto w-full px-4 md:px-6"
+  }, otherResources.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "py-12 text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[#86868B] text-lg"
+  }, "Aucune ressource trouv\xE9e")) : /*#__PURE__*/React.createElement("div", {
+    className: "grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+  }, otherResources.map((resource, index) => /*#__PURE__*/React.createElement(AppleCardWithNavigation, {
+    key: resource.id,
+    resource: resource,
+    index: index
+  })))))), /*#__PURE__*/React.createElement(FinalCTA, null), /*#__PURE__*/React.createElement(Footer, null));
+}
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render( /*#__PURE__*/React.createElement(App, null));
