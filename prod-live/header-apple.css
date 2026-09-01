@@ -596,7 +596,7 @@
    glass-over-light du site reste la reference).
    ========================================================================== */
 .site-bar.solid:not(.glass-over-light) .site-bar__pill {
-  background: rgba(17, 17, 19, .50) !important;
+  background: rgba(17, 17, 19, .40) !important;
   border-color: rgba(255, 255, 255, .13) !important;
 }
 .site-bar.solid:not(.glass-over-light) .bar-link {
