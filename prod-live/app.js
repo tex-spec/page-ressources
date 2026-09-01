@@ -817,24 +817,14 @@ function AppleCard({
   }, /*#__PURE__*/React.createElement("span", {
     className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
   }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-between pt-2.5"
+    className: "flex items-center pt-2.5"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-1.5"
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-[10px] text-[#86868B] font-medium"
   }, "Mot-cl\xE9:"), /*#__PURE__*/React.createElement("span", {
     className: "px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10"
-  }, resource.ctaKeyword || resource.tags?.[0] || 'IA')), /*#__PURE__*/React.createElement("svg", {
-    className: "h-4 w-4 text-[#0071E3]",
-    fill: "none",
-    stroke: "currentColor",
-    viewBox: "0 0 24 24"
-  }, /*#__PURE__*/React.createElement("path", {
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    strokeWidth: 2,
-    d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-  }))))), /*#__PURE__*/React.createElement(VideoModal, {
+  }, resource.ctaKeyword || resource.tags?.[0] || 'IA'))))), /*#__PURE__*/React.createElement(VideoModal, {
     isOpen: isModalOpen,
     onClose: () => setIsModalOpen(false),
     vimeoUrl: resource.vimeoUrl,
@@ -1267,24 +1257,14 @@ function App() {
     }, /*#__PURE__*/React.createElement("span", {
       className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
     }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
-      className: "flex items-center justify-between pt-2.5"
+      className: "flex items-center pt-2.5"
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-1.5"
     }, /*#__PURE__*/React.createElement("span", {
       className: "text-[10px] text-[#86868B] font-medium"
     }, "Mot-cl\xE9:"), /*#__PURE__*/React.createElement("span", {
       className: "px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#C9A227]/30 text-[#B8860B] bg-[#C9A227]/10"
-    }, resource.ctaKeyword || resource.tags?.[0] || 'IA')), /*#__PURE__*/React.createElement("svg", {
-      className: "h-4 w-4 text-[#0071E3]",
-      fill: "none",
-      stroke: "currentColor",
-      viewBox: "0 0 24 24"
-    }, /*#__PURE__*/React.createElement("path", {
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      strokeWidth: 2,
-      d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-    }))))), /*#__PURE__*/React.createElement(VideoModal, {
+    }, resource.ctaKeyword || resource.tags?.[0] || 'IA'))))), /*#__PURE__*/React.createElement(VideoModal, {
       isOpen: isModalOpen,
       onClose: () => setIsModalOpen(false),
       vimeoUrl: resource.vimeoUrl,
