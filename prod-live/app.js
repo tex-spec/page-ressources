@@ -817,7 +817,7 @@ function AppleCard({
   }, /*#__PURE__*/React.createElement("span", {
     className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
   }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center pt-2.5"
+    className: "flex items-center justify-center pt-2.5"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-1.5"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1257,7 +1257,7 @@ function App() {
     }, /*#__PURE__*/React.createElement("span", {
       className: "flex items-center justify-center w-full h-[40px] px-4 rounded-full bg-[#0071e3] group-hover:bg-[#0077ed] text-white font-medium text-[13px] md:text-[15.2px] transition-colors duration-200"
     }, "Acc\xE8s imm\xE9diat")), /*#__PURE__*/React.createElement("div", {
-      className: "flex items-center pt-2.5"
+      className: "flex items-center justify-center pt-2.5"
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-1.5"
     }, /*#__PURE__*/React.createElement("span", {
