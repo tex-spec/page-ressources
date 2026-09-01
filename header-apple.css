@@ -589,13 +589,15 @@
    Hub ressources : le fond de page est clair (#F5F5F7), pas le noir #030303
    des quatre pages du site. Mesure du 01/09 : avec le voile de marque a 0.28,
    le texte du header tombe a 1.79:1 sur la grille claire, tres en dessous du
-   seuil AA de 4.5. On assombrit la pilule UNIQUEMENT quand aucun media riche
+   seuil AA de 4.5. Valeur 0.50 retenue apres mesure : le texte reste tres au-dessus du seuil
+   et les nuances des cartes sous la barre restent perceptibles (ecart 117 contre
+   73 a 0.70). On assombrit UNIQUEMENT quand aucun media riche
    ne passe dessous (donc pas sur le hero ni sur la video du CTA, ou la teinte
    glass-over-light du site reste la reference).
    ========================================================================== */
 .site-bar.solid:not(.glass-over-light) .site-bar__pill {
-  background: rgba(17, 17, 19, .70) !important;
-  border-color: rgba(255, 255, 255, .14) !important;
+  background: rgba(17, 17, 19, .50) !important;
+  border-color: rgba(255, 255, 255, .13) !important;
 }
 .site-bar.solid:not(.glass-over-light) .bar-link {
   color: rgba(245, 245, 247, .92) !important;
