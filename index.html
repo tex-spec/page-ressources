@@ -281,7 +281,7 @@
     // un token GHL dans le front. En prod, définir window.RESOURCE_HUB_GHL_WEBHOOK_URL
     // avant ce script, ou injecter la valeur via Vercel/env au build.
     const GHL_TRACKING_WEBHOOK_URL = window.RESOURCE_HUB_GHL_WEBHOOK_URL || "";
-    const CHALLENGE_URL = "https://www.samurai-marketing.com/";
+    const CHALLENGE_URL = "https://challenge.samurai-marketing.com/";
     const TRACKING_STORAGE_KEY = "samurai_resource_hub_tracking";
 
     function getTrackingParams() {
@@ -852,10 +852,8 @@
 
             {/* CTA - Bouton Apple */}
             <a
-              href={CHALLENGE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackChallengeClick({ placement: 'hero' })}
+              href="#ressources"
+              onClick={(e) => { e.preventDefault(); const g = document.getElementById('ressources'); if (g) g.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
               className="mt-7 md:mt-9 inline-flex items-center justify-center h-[44px] px-[21px] bg-[#f2efe8] hover:bg-[#fff] text-[#101114] font-medium text-[15.2px] rounded-full transition-[background] duration-200 ease-out"
             >
               Accéder aux ressources
@@ -1741,7 +1739,7 @@
                 </button>
               </div>
             ) : (
-              <section className="w-full pt-8 pb-3 bg-[#F5F5F7]">
+              <section id="ressources" className="w-full pt-8 pb-3 bg-[#F5F5F7]">
                 <div className="px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3">
                   <h2 className="text-lg md:text-xl font-bold text-[#1D1D1F] tracking-tight">
                     {searchTerm || selectedTag ? "Résultats de recherche" : "Ressources les plus récentes"}

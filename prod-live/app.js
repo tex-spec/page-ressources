@@ -29,7 +29,7 @@ const FETCH_TIMEOUT_MS = 20000;
 // un token GHL dans le front. En prod, définir window.RESOURCE_HUB_GHL_WEBHOOK_URL
 // avant ce script, ou injecter la valeur via Vercel/env au build.
 const GHL_TRACKING_WEBHOOK_URL = window.RESOURCE_HUB_GHL_WEBHOOK_URL || "";
-const CHALLENGE_URL = "https://www.samurai-marketing.com/";
+const CHALLENGE_URL = "https://challenge.samurai-marketing.com/";
 const TRACKING_STORAGE_KEY = "samurai_resource_hub_tracking";
 function getTrackingParams() {
   const params = new URLSearchParams(window.location.search);
@@ -544,12 +544,15 @@ function Hero() {
   }, "avant d'\xEAtre juste plus rapide.")), /*#__PURE__*/React.createElement("p", {
     className: "mt-4 md:mt-6 max-w-[34rem] text-[15px] md:text-[18px] text-[#ddd7c9] leading-[1.5] md:leading-[1.55]"
   }, "Mes ressources IA pour dirigeants qui veulent l'esprit libre. Prends les m\xE9thodes exactes, sans bo\xEEte noire."), /*#__PURE__*/React.createElement("a", {
-    href: CHALLENGE_URL,
-    target: "_blank",
-    rel: "noopener noreferrer",
-    onClick: () => trackChallengeClick({
-      placement: 'hero'
-    }),
+    href: "#ressources",
+    onClick: e => {
+      e.preventDefault();
+      const g = document.getElementById('ressources');
+      if (g) g.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    },
     className: "mt-7 md:mt-9 inline-flex items-center justify-center h-[44px] px-[21px] bg-[#f2efe8] hover:bg-[#fff] text-[#101114] font-medium text-[15.2px] rounded-full transition-[background] duration-200 ease-out"
   }, "Acc\xE9der aux ressources")));
 }
@@ -1354,6 +1357,7 @@ function App() {
     onClick: () => setReloadKey(value => value + 1),
     className: "mt-6 inline-flex items-center justify-center rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold px-6 py-3 transition-colors shadow-lg"
   }, "R\xE9essayer")) : /*#__PURE__*/React.createElement("section", {
+    id: "ressources",
     className: "w-full pt-8 pb-3 bg-[#F5F5F7]"
   }, /*#__PURE__*/React.createElement("div", {
     className: "px-4 md:px-6 max-w-[1000px] mx-auto w-full mb-3"
