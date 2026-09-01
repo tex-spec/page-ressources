@@ -34,7 +34,7 @@ cp index.html /tmp/scan.html
 cd $D && python3 - <<'PY'
 import re,hashlib
 s=open('index.html',encoding='utf-8').read()
-for f in ['app.js','tailwind.css','header-base.css','header-apple.css','header-apple.js','covers.js']:
+for f in ['app.js','tailwind.css','header-base.css','header-apple.css','header-apple.js','header-glass.js','covers.js']:
     v=hashlib.md5(open(f,'rb').read()).hexdigest()[:8]
     s=re.sub(r'(["\'])'+re.escape(f)+r'(\?v=[a-f0-9]+)?\1', r'\g<1>'+f+'?v='+v+r'\1', s)
 open('index.html','w',encoding='utf-8').write(s)

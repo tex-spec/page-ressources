@@ -526,6 +526,7 @@ function Header() {
 // ============================================
 function Hero() {
   return /*#__PURE__*/React.createElement("section", {
+    "data-sc-stage": true,
     className: "pt-14 pb-12 md:pt-20 md:pb-16 px-6 md:px-8 w-full bg-center bg-cover",
     style: {
       backgroundColor: '#030303',
